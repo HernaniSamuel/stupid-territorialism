@@ -1,13 +1,13 @@
-/** Peças compartilhadas pelos scripts de simulação (`tournament` e `evolve`). */
+/** Shared pieces used by the simulation scripts (`tournament` and `evolve`). */
 import type { Personality } from '../src/config';
 import { createGame, update } from '../src/game';
 import { standings } from '../src/rules/match';
 import type { PlayerCommand } from '../src/types';
 
-// Só o que usamos do Node: evita depender de @types/node.
+// Only what we use from Node: avoids depending on @types/node.
 declare const process: { env: Record<string, string | undefined> };
 
-/** Lê uma variável de ambiente (ex.: `SEEDS=200 npm run sim`). */
+/** Reads an environment variable (e.g. `SEEDS=200 npm run sim`). */
 export function env(name: string, fallback: string): string {
   return process.env[name] ?? fallback;
 }
@@ -17,16 +17,16 @@ const IDLE: PlayerCommand = { dir: { x: 0, y: 0 }, fire: false, aim: { x: 0, y: 
 
 export interface SeatResult {
   persona: Personality;
-  /** Canto de nascimento (= id do agente). */
+  /** Spawn corner (= agent id). */
   seat: number;
-  /** % do mapa no fim da partida. */
+  /** % of the map at the end of the match. */
   pct: number;
   kills: number;
   deaths: number;
   won: boolean;
 }
 
-/** Joga uma partida inteira só de bots. `seats[i]` é a personalidade do agente `i` (0 a 3). */
+/** Plays a full match with bots only. `seats[i]` is the personality of agent `i` (0 to 3). */
 export function playMatch(seed: number, seats: Personality[]): SeatResult[] {
   const state = createGame(seed, { human: false, personalities: seats });
   while (!state.over) {

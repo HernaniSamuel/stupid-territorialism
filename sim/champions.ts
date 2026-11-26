@@ -1,10 +1,10 @@
-/** Personalidades achadas por `npm run evolve` (arredondadas), pra comparar no torneio antes de adotar no jogo. */
+/** Personalities found by `npm run evolve` (rounded), to compare in the tournament before adopting them in the game. */
 import { CLASSIC, type Personality } from '../src/config';
 
-/** Busca A: partindo do guloso. */
+/** Search A: starting from greedy. */
 export const EVOLVED_A: Personality = {
   ...CLASSIC,
-  label: 'evoluído A',
+  label: 'evolved A',
   loopMul: 1.14,
   planTries: 53,
   riskWeight: 1.9,
@@ -17,10 +17,10 @@ export const EVOLVED_A: Personality = {
   defend: 0.49,
 };
 
-/** Busca B: partindo do clássico. */
+/** Search B: starting from classic. */
 export const EVOLVED_B: Personality = {
   ...CLASSIC,
-  label: 'evoluído B',
+  label: 'evolved B',
   loopMul: 1.31,
   planTries: 48,
   riskWeight: 2.33,
@@ -33,10 +33,10 @@ export const EVOLVED_B: Personality = {
   defend: 0.12,
 };
 
-/** Média das duas buscas: o que ambas concordam, com os parâmetros que divergiram no meio-termo. */
+/** Average of the two searches: what both agree on, with the parameters that diverged taken at the midpoint. */
 export const EVOLVED_MEAN: Personality = {
   ...CLASSIC,
-  label: 'evoluído médio',
+  label: 'evolved mean',
   loopMul: 1.2,
   planTries: 50,
   riskWeight: 2.1,
@@ -49,18 +49,18 @@ export const EVOLVED_MEAN: Personality = {
   defend: 0.3,
 };
 
-// ---- Versão anterior das personalidades do jogo (antes da busca evolutiva), guardada pra comparação ----
+// ---- Previous version of the game's personalities (before evolutionary search), kept for comparison ----
 
-const OLD_SMART: Personality = { ...CLASSIC, label: 'inteligente (antigo)', planTries: 40, dodge: 0.9, leaderBias: 0.5 };
+const OLD_SMART: Personality = { ...CLASSIC, label: 'smart (old)', planTries: 40, dodge: 0.9, leaderBias: 0.5 };
 
 export const LEGACY_HUNTER: Personality = {
   ...OLD_SMART,
-  label: 'caçador (antigo)',
+  label: 'hunter (old)',
   leaderBias: 1,
   huntFlagP: 0.5,
   chaseP: 0.1,
   chaseSteps: 3,
   defend: 0.3,
 };
-export const LEGACY_CAUTIOUS: Personality = { ...OLD_SMART, label: 'cauteloso (antigo)', loopMul: 0.85, riskWeight: 1, dodge: 0.95 };
-export const LEGACY_GREEDY: Personality = { ...OLD_SMART, label: 'guloso (antigo)', loopMul: 1.3 };
+export const LEGACY_CAUTIOUS: Personality = { ...OLD_SMART, label: 'cautious (old)', loopMul: 0.85, riskWeight: 1, dodge: 0.95 };
+export const LEGACY_GREEDY: Personality = { ...OLD_SMART, label: 'greedy (old)', loopMul: 1.3 };

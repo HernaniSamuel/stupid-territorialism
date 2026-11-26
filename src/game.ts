@@ -1,6 +1,6 @@
 /**
- * Orquestra a simulação: cria uma partida e avança um frame de cada vez.
- * Não depende de DOM, canvas ou áudio, então roda igual no navegador e nos testes.
+ * Orchestrates the simulation: creates a match and advances one frame at a time.
+ * Does not depend on DOM, canvas or audio, so it runs the same in the browser and in the tests.
  */
 import { botCombat } from './ai/combat';
 import { botPick } from './ai/bot';
@@ -18,21 +18,21 @@ import { destroyChain, respawn } from './rules/territory';
 import type { GameState, PlayerCommand } from './types';
 
 export interface GameOptions {
-  /** De onde vem o mapa (padrão: procedural). */
+  /** Where the map comes from (default: procedural). */
   source?: MapSource;
-  /** `false` faz o agente 0 também ser um bot (usado nas simulações de torneio). Padrão: `true`. */
+  /** `false` makes agent 0 a bot too (used in tournament simulations). Default: `true`. */
   human?: boolean;
-  /** Personalidade de cada agente, pelo id. Padrão: `CFG.botBrain` decide. */
+  /** Personality of each agent, by id. Default: `CFG.botBrain` decides. */
   personalities?: Personality[];
 }
 
-/** Personalidades dos agentes 0..botCount conforme `CFG.botBrain`. O índice 0 (humano) é ignorado. */
+/** Personalities of agents 0..botCount according to `CFG.botBrain`. Index 0 (human) is ignored. */
 function defaultPersonalities(): Personality[] {
   const bots = CFG.botBrain === 'smart' ? BOT_LINEUP : [];
   return [CLASSIC, ...Array.from({ length: CFG.botCount }, (_, i) => bots[i] ?? CLASSIC)];
 }
 
-/** Cria uma partida nova. A mesma semente e as mesmas opções geram o mesmo mapa e as mesmas decisões. */
+/** Creates a new match. The same seed and the same options generate the same map and the same decisions. */
 export function createGame(seed: number, options: GameOptions = {}): GameState {
   const { source = proceduralSource, human = true } = options;
   const personas = options.personalities ?? defaultPersonalities();
@@ -55,11 +55,11 @@ export function createGame(seed: number, options: GameOptions = {}): GameState {
   };
 }
 
-/** Avança a simulação `dt` segundos. `cmd` é o que o jogador humano está pedindo. */
+/** Advances the simulation by `dt` seconds. `cmd` is what the human player is asking for. */
 export function update(state: GameState, dt: number, cmd: PlayerCommand): void {
   const { world, agents } = state;
 
-  // Efeitos visuais seguem mesmo depois do fim da partida.
+  // Visual effects keep going even after the match ends.
   for (const f of world.faces) if (f.flash > 0) f.flash = Math.max(0, f.flash - dt * 1.2);
   for (const p of state.particles) {
     p.x += p.vx * dt;
@@ -111,7 +111,7 @@ export function update(state: GameState, dt: number, cmd: PlayerCommand): void {
     }
   }
 
-  // Encostar numa bandeira inimiga destrói a cadeia inteira do dono.
+  // Touching an enemy flag destroys the owner's entire chain.
   for (const ag of agents) {
     if (!ag.alive) continue;
     for (const owner of agents) {

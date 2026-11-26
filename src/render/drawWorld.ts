@@ -1,4 +1,4 @@
-/** Desenho do mapa: quarteirões, ruas e bordas de território. */
+/** Map drawing: city blocks, streets and territory borders. */
 import { TEAMS } from '../config';
 import type { GameState, Vec } from '../types';
 import { chainInfo } from './chains';
@@ -9,7 +9,7 @@ export function polyPath(ctx: CanvasRenderingContext2D, pts: Vec[]): void {
   ctx.closePath();
 }
 
-/** Quarteirões com a cor do dono, e a prévia (translúcida) do que cada laço aberto cercaria. */
+/** City blocks in the owner's color, and the (translucent) preview of what each open loop would enclose. */
 export function drawBlocks(ctx: CanvasRenderingContext2D, state: GameState): void {
   for (const f of state.world.faces) {
     polyPath(ctx, f.pts);
@@ -49,7 +49,7 @@ export function drawStreets(ctx: CanvasRenderingContext2D, state: GameState): vo
   ctx.stroke();
 }
 
-/** Pinta as ruas que separam territórios diferentes; disputa vira tracejado. */
+/** Paints the streets that separate different territories; a contested one becomes dashed. */
 export function drawTerritoryBorders(ctx: CanvasRenderingContext2D, state: GameState): void {
   const { nodes, edges, faces, halfEdgeFace } = state.world;
   const N = nodes.length;

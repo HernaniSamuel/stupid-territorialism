@@ -1,12 +1,12 @@
 import { defineConfig } from 'vitest/config';
 
-// Configuração só do torneio de bots (`npm run sim`). Fica fora do `npm test` porque demora.
+// Configuration for the bot tournament only (`npm run sim`). Kept out of `npm test` because it is slow.
 export default defineConfig({
   test: {
     environment: 'node',
     include: ['sim/**/*.sim.ts'],
     testTimeout: 3_600_000,
-    // Sem isso o Vitest esconde o console.log com o resultado.
+    // Without this, Vitest hides the console.log output with the results.
     disableConsoleIntercept: true,
     silent: false,
   },

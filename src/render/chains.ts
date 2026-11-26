@@ -1,21 +1,21 @@
 import { enclosedFaces, path } from '../map/graph';
 import type { Agent, Face, GameState } from '../types';
 
-/** Geometria derivada da cadeia de bandeiras de um agente, só pra desenhar. */
+/** Geometry derived from an agent's flag chain, only for drawing. */
 export interface ChainInfo {
-  /** Chave das bandeiras usada pra saber se o cache ainda vale. */
+  /** Key of the flags, used to know whether the cache is still valid. */
   key: string;
-  /** Nós do trecho já "construído" (da 1ª à última bandeira). */
+  /** Nodes of the stretch already "built" (from the 1st to the last flag). */
   open: number[];
-  /** Nós do trecho que fecharia o laço (da última de volta à 1ª). */
+  /** Nodes of the stretch that would close the loop (from the last back to the 1st). */
   close: number[];
-  /** Quarteirões que seriam capturados se o laço fechasse agora. */
+  /** Blocks that would be captured if the loop closed right now. */
   fill: Face[];
 }
 
 const caches = new WeakMap<GameState, Map<number, ChainInfo>>();
 
-/** Calcula (com cache por partida) a geometria da cadeia do agente. */
+/** Computes (cached per match) the agent's chain geometry. */
 export function chainInfo(state: GameState, ag: Agent): ChainInfo {
   let perAgent = caches.get(state);
   if (!perAgent) caches.set(state, (perAgent = new Map()));

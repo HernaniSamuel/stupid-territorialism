@@ -1,7 +1,7 @@
 /**
- * Regras do jogo: bandeiras, laços, destruição de cadeias, morte e renascimento.
- * Nada aqui desenha, toca som ou escreve na tela: tudo que a UI precisa saber
- * sai como evento em `state.events`.
+ * Game rules: flags, loops, chain destruction, death and respawn.
+ * Nothing here draws, plays sound or writes to the screen: everything the UI needs to know
+ * comes out as an event in `state.events`.
  */
 import { CFG } from '../config';
 import { enclosedFaces } from '../map/graph';
@@ -9,8 +9,8 @@ import { place } from '../entities/agent';
 import type { Agent, GameState } from '../types';
 
 /**
- * Finca uma bandeira de `ag` no nó. Com 3 ou mais bandeiras, fincar na primeira fecha o laço.
- * @returns se algo mudou (bandeira fincada ou laço fechado).
+ * Plants a flag of `ag` on the node. With 3 or more flags, planting on the first one closes the loop.
+ * @returns whether something changed (flag planted or loop closed).
  */
 export function plant(state: GameState, ag: Agent, node: number): boolean {
   if (!ag.alive) return false;
@@ -33,7 +33,7 @@ export function plant(state: GameState, ag: Agent, node: number): boolean {
   return true;
 }
 
-/** Fecha o laço de bandeiras: os quarteirões cercados passam a ser do agente. */
+/** Closes the flag loop: the enclosed blocks become the agent's. */
 export function closeLoop(state: GameState, ag: Agent): void {
   const { world } = state;
   let gain = 0;
@@ -49,7 +49,7 @@ export function closeLoop(state: GameState, ag: Agent): void {
   else state.events.push({ type: 'claimEmpty', agent: ag });
 }
 
-/** `by` encostou numa bandeira de `owner`: a cadeia inteira dele é perdida. */
+/** `by` touched a flag of `owner`: the owner's entire chain is lost. */
 export function destroyChain(state: GameState, owner: Agent, by: Agent): void {
   if (!owner.flags.length) return;
   owner.flags = [];
@@ -58,7 +58,7 @@ export function destroyChain(state: GameState, owner: Agent, by: Agent): void {
   state.events.push({ type: 'chainDestroyed', owner, by });
 }
 
-/** `killer` derruba `victim`: ele perde as bandeiras e fica fora até renascer. */
+/** `killer` takes down `victim`: they lose their flags and stay out until they respawn. */
 export function kill(state: GameState, victim: Agent, killer: Agent): void {
   if (!victim.alive) return;
   victim.alive = false;
@@ -84,7 +84,7 @@ export function kill(state: GameState, victim: Agent, killer: Agent): void {
   state.events.push({ type: 'kill', victim, killer });
 }
 
-/** Renasce num nó do próprio território (ou na base, se não tiver nenhum). */
+/** Respawns on a node of the agent's own territory (or at the base, if it has none). */
 export function respawn(state: GameState, ag: Agent): void {
   const { world, rng } = state;
   const candidates: number[] = [];

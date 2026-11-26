@@ -1,16 +1,16 @@
 /**
- * Cérebro dos bots. Toda vez que um bot chega a um cruzamento, `botPick` decide a
- * próxima rua, em três camadas:
+ * Bot brain. Every time a bot reaches an intersection, `botPick` decides the
+ * next street, in three layers:
  *
- *  1. **Reação** — um inimigo chegou perto das minhas bandeiras? Largo o plano e vou
- *     interceptá-lo (`persona.defend`).
- *  2. **Deliberação** — sem rota, decide o que fazer: seguir o plano, caçar bandeira,
- *     perseguir ou planejar uma conquista (`botThink`).
- *  3. **Desvio** — a rua escolhida está na linha de fogo de alguém? Pega uma lateral
+ *  1. **Reaction** — has an enemy come close to my flags? I drop the plan and go
+ *     intercept it (`persona.defend`).
+ *  2. **Deliberation** — with no route, decides what to do: follow the plan, hunt a flag,
+ *     chase, or plan a new conquest (`botThink`).
+ *  3. **Dodge** — is the chosen street in someone's line of fire? Take a side street
  *     (`persona.dodge`).
  *
- * O estado de cada bot é `plan` (bandeiras a fincar) e `route` (nós até o destino imediato).
- * Os "quanto" de cada comportamento vêm da personalidade (`bot.persona`).
+ * Each bot's state is `plan` (flags to plant) and `route` (nodes to the immediate destination).
+ * The "how much" of each behavior comes from the personality (`bot.persona`).
  */
 import { CFG } from '../config';
 import { nearestNode, path, shortestPaths } from '../map/graph';
@@ -20,10 +20,10 @@ import type { Agent, GameState } from '../types';
 import { chainThreat, edgeExposed, incomingFire } from './perception';
 import { planClaim } from './planner';
 
-/** Não vale interceptar quem está a mais que isso (distância de rua) de mim. */
+/** Not worth intercepting someone more than this far (street distance) from me. */
 const MAX_INTERCEPT_DIST = 500;
 
-/** Chegou ao próximo ponto do plano? Então finca a bandeira (a última do plano fecha o laço). */
+/** Reached the next point of the plan? Then plant the flag (the last one in the plan closes the loop). */
 function botArrive(state: GameState, bot: Agent, node: number): void {
   if (bot.plan.length && bot.plan[0] === node) {
     plant(state, bot, node);
@@ -33,7 +33,7 @@ function botArrive(state: GameState, bot: Agent, node: number): void {
   }
 }
 
-/** Camada 1: se um inimigo ameaça minhas bandeiras, a rota vira "ir até ele". */
+/** Layer 1: if an enemy threatens my flags, the route becomes "go to them". */
 function reactToThreat(state: GameState, bot: Agent, node: number): void {
   const p = bot.persona;
   if (p.defend <= 0) return;
@@ -45,7 +45,7 @@ function reactToThreat(state: GameState, bot: Agent, node: number): void {
   bot.route = path(world, node, target).slice(1, 1 + CFG.botInterceptSteps);
 }
 
-/** Camada 2: define o que fazer a seguir quando não há rota. */
+/** Layer 2: decides what to do next when there is no route. */
 function botThink(state: GameState, bot: Agent, node: number): void {
   const { world, rng, agents } = state;
   const persona = bot.persona;
@@ -56,12 +56,12 @@ function botThink(state: GameState, bot: Agent, node: number): void {
 
   const r = rng();
   const foes = agents.filter((o) => o !== bot && o.alive);
-  // Quem lidera é alvo preferido: a "distância" até ele é dividida por (1 + leaderBias).
+  // The leader is a preferred target: the "distance" to them is divided by (1 + leaderBias).
   const lead = leader(state);
   const appeal = (o: Agent) => (o === lead ? 1 + persona.leaderBias : 1);
 
   if (r < persona.huntFlagP) {
-    // Ir até a bandeira inimiga mais próxima (por rua) e destruir a cadeia.
+    // Go to the nearest enemy flag (by street) and destroy the chain.
     let target = -1;
     let bestScore = 1e12;
     const dist = shortestPaths(world, node).dist;
@@ -82,7 +82,7 @@ function botThink(state: GameState, bot: Agent, node: number): void {
   }
 
   if (r < persona.huntFlagP + persona.chaseP && foes.length) {
-    // Perseguir o inimigo mais próximo, só os primeiros passos da rota (depois reavalia).
+    // Chase the nearest enemy, only the first steps of the route (then reassess).
     let target: Agent | null = null;
     let bestScore = 1e12;
     for (const o of foes) {
@@ -106,9 +106,9 @@ function botThink(state: GameState, bot: Agent, node: number): void {
 }
 
 /**
- * Camada 3: se a rua escolhida passa pela linha de fogo de alguém e existe uma saída
- * fora dela, troca pela saída que deixa mais perto do destino. A rota é descartada,
- * então no próximo cruzamento o bot replaneja a partir de onde estiver.
+ * Layer 3: if the chosen street runs through someone's line of fire and there is an exit
+ * outside of it, swap it for the exit that gets closest to the destination. The route is discarded,
+ * so at the next intersection the bot replans from wherever it is.
  */
 function dodge(state: GameState, bot: Agent, node: number, intended: number, goal: number): number {
   const { world, rng } = state;
@@ -130,7 +130,7 @@ function dodge(state: GameState, bot: Agent, node: number, intended: number, goa
   return best;
 }
 
-/** Escolhe a próxima rua do bot no cruzamento `node` (é o `PickFn` dele). */
+/** Picks the bot's next street at intersection `node` (this is its `PickFn`). */
 export function botPick(state: GameState, bot: Agent, node: number): number {
   const { world, rng } = state;
   botArrive(state, bot, node);
@@ -144,7 +144,7 @@ export function botPick(state: GameState, bot: Agent, node: number): number {
   const goal = bot.route.length ? bot.route[bot.route.length - 1] : bot.plan.length ? bot.plan[0] : -1;
   while (bot.route.length && bot.route[0] === node) bot.route.shift();
   const next = bot.route.shift();
-  // Sem rota nenhuma: vira numa rua qualquer, pra nunca ficar parado.
+  // No route at all: turn onto any street, so it never stands still.
   const chosen = next === undefined ? world.adj[node][(rng() * world.adj[node].length) | 0].to : next;
 
   return bot.persona.dodge > 0 && rng() < bot.persona.dodge ? dodge(state, bot, node, chosen, goal) : chosen;

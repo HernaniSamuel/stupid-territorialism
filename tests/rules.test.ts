@@ -6,8 +6,8 @@ import { closeLoop, destroyChain, kill, plant, respawn } from '../src/rules/terr
 import type { GameState } from '../src/types';
 import { gridSource } from './helpers';
 
-// Grade 5x5, espaçamento 100: 16 quarteirões de 10000 (total 160000). Índices = j*5 + i.
-// O quarteirão do canto superior esquerdo é cercado pelos nós 0, 1, 6, 5.
+// 5x5 grid, spacing 100: 16 blocks of 10000 (total 160000). Index = j*5 + i.
+// The top-left block is enclosed by nodes 0, 1, 6, 5.
 const CELL = [0, 1, 6, 5];
 const CELL_PCT = (10000 / 160000) * 100;
 
@@ -18,8 +18,8 @@ beforeEach(() => {
 
 const types = () => state.events.map((e) => e.type);
 
-describe('bandeiras e laços', () => {
-  it('3 bandeiras avisam que já dá pra fechar', () => {
+describe('flags and loops', () => {
+  it('3 flags warn that the loop can be closed now', () => {
     plant(state, state.player, 0);
     plant(state, state.player, 1);
     expect(types()).not.toContain('loopReady');
@@ -27,7 +27,7 @@ describe('bandeiras e laços', () => {
     expect(types()).toContain('loopReady');
   });
 
-  it('voltar à primeira bandeira fecha o laço e dá o quarteirão ao jogador', () => {
+  it('returning to the first flag closes the loop and gives the block to the player', () => {
     const p = state.player;
     for (const n of CELL) plant(state, p, n);
     expect(p.flags).toEqual(CELL);
@@ -42,7 +42,7 @@ describe('bandeiras e laços', () => {
     expect(standings(state)[0].pct).toBeCloseTo(CELL_PCT);
   });
 
-  it('fechar um laço que não cerca nada novo avisa e não muda o dono', () => {
+  it('closing a loop that encloses nothing new reports it and does not change the owner', () => {
     const p = state.player;
     for (const n of CELL) plant(state, p, n);
     closeLoop(state, p);
@@ -52,7 +52,7 @@ describe('bandeiras e laços', () => {
     expect(types()).toEqual(['claimEmpty']);
   });
 
-  it('um laço de outro agente rouba o quarteirão', () => {
+  it("another agent's loop steals the block", () => {
     const [me, rival] = [state.player, state.agents[1]];
     for (const n of CELL) plant(state, me, n);
     closeLoop(state, me);
@@ -62,7 +62,7 @@ describe('bandeiras e laços', () => {
     expect(state.world.faces.filter((f) => f.owner === me.id)).toHaveLength(0);
   });
 
-  it('rejeita bandeira repetida e passar do máximo', () => {
+  it('rejects a repeated flag and going over the maximum', () => {
     const p = state.player;
     plant(state, p, 0);
     expect(plant(state, p, 0)).toBe(false);
@@ -74,15 +74,15 @@ describe('bandeiras e laços', () => {
     expect(state.events.at(-1)).toMatchObject({ type: 'plantRejected', reason: 'maxFlags' });
   });
 
-  it('agente morto não finca bandeira', () => {
+  it('a dead agent cannot plant a flag', () => {
     state.player.alive = false;
     expect(plant(state, state.player, 0)).toBe(false);
     expect(state.player.flags).toEqual([]);
   });
 });
 
-describe('destruição e morte', () => {
-  it('destroyChain zera bandeiras, plano e rota do dono', () => {
+describe('destruction and death', () => {
+  it('destroyChain clears the owner\'s flags, plan and route', () => {
     const rival = state.agents[1];
     rival.flags = [0, 1, 6];
     rival.plan = [6, 0];
@@ -94,12 +94,12 @@ describe('destruição e morte', () => {
     expect(state.events.at(-1)).toMatchObject({ type: 'chainDestroyed', owner: rival, by: state.player });
   });
 
-  it('destroyChain não faz nada se não havia bandeiras', () => {
+  it('destroyChain does nothing if there were no flags', () => {
     destroyChain(state, state.agents[1], state.player);
     expect(state.events).toEqual([]);
   });
 
-  it('kill derruba o alvo, conta placar, perde bandeiras e solta partículas', () => {
+  it('kill takes down the target, counts on the scoreboard, loses flags and releases particles', () => {
     const [killer, victim] = [state.player, state.agents[1]];
     victim.flags = [0, 1, 6];
     kill(state, victim, killer);
@@ -112,14 +112,14 @@ describe('destruição e morte', () => {
     expect(state.events.at(-1)).toMatchObject({ type: 'kill', victim, killer });
   });
 
-  it('matar quem já está morto é ignorado', () => {
+  it('killing someone who is already dead is ignored', () => {
     const victim = state.agents[1];
     kill(state, victim, state.player);
     kill(state, victim, state.player);
     expect(state.player.kills).toBe(1);
   });
 
-  it('renasce num nó do próprio território, ou na base se não tiver', () => {
+  it('respawns on a node of its own territory, or at the base if it has none', () => {
     const p = state.player;
     kill(state, p, state.agents[1]);
     respawn(state, p);
@@ -135,8 +135,8 @@ describe('destruição e morte', () => {
   });
 });
 
-describe('fim de partida', () => {
-  it('encerra quando alguém passa de winPct, avisando uma vez só', () => {
+describe('end of match', () => {
+  it('ends when someone passes winPct, announcing it only once', () => {
     const half = state.world.faces.slice(0, Math.ceil(state.world.faces.length * 0.6));
     for (const f of half) f.owner = state.player.id;
     checkVictory(state);
@@ -145,7 +145,7 @@ describe('fim de partida', () => {
     expect(types().filter((t) => t === 'matchEnd')).toHaveLength(1);
   });
 
-  it('não encerra com pouco território', () => {
+  it('does not end with little territory', () => {
     state.world.faces[0].owner = state.player.id;
     checkVictory(state);
     expect(state.over).toBe(false);

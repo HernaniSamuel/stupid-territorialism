@@ -1,16 +1,16 @@
-/** Canvas: ajusta tamanho/DPR, aplica a câmera e desenha as camadas na ordem certa. */
+/** Canvas: sets size/DPR, applies the camera and draws the layers in the right order. */
 import type { GameState, Vec } from '../types';
 import type { Camera } from './camera';
 import { drawAgents, drawBullets, drawFences, drawFlags, drawParticles, drawShotPreview } from './drawEntities';
 import { drawBlocks, drawStreets, drawTerritoryBorders } from './drawWorld';
 
 export interface Renderer {
-  /** Tamanho da viewport em pixels CSS. */
+  /** Viewport size in CSS pixels. */
   readonly width: number;
   readonly height: number;
   /**
-   * @param t tempo em segundos (só pras animações)
-   * @param aim ponto do mundo apontado pelo mouse
+   * @param t time in seconds (only for animations)
+   * @param aim world point pointed at by the mouse
    */
   render(state: GameState, cam: Camera, t: number, aim: Vec): void;
 }
@@ -19,7 +19,7 @@ const BACKGROUND = '#dcd8cc';
 
 export function createRenderer(canvas: HTMLCanvasElement): Renderer {
   const ctx = canvas.getContext('2d');
-  if (!ctx) throw new Error('Canvas 2D indisponível');
+  if (!ctx) throw new Error('Canvas 2D unavailable');
   let width = 0;
   let height = 0;
   let dpr = 1;

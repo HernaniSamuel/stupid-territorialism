@@ -6,9 +6,9 @@ import type { MapSource } from './source';
 type GridParams = Pick<Config, 'cols' | 'rows' | 'sp' | 'jit' | 'keepEdge' | 'diag'>;
 
 /**
- * Grade de cruzamentos deslocados aleatoriamente, com algumas ruas removidas e
- * algumas diagonais. A borda quase não é deslocada e mantém todas as ruas, e o
- * grafo final é sempre conexo (ruas removidas voltam se isolariam uma parte).
+ * A grid of randomly displaced intersections, with some streets removed and
+ * some diagonals. The border is barely displaced and keeps all its streets, and the
+ * final graph is always connected (removed streets come back if they would isolate a part).
  */
 export function generateProceduralGraph(rng: Rng, params: GridParams = CFG): Graph {
   const { cols, rows, sp, jit, keepEdge, diag } = params;
@@ -23,7 +23,7 @@ export function generateProceduralGraph(rng: Rng, params: GridParams = CFG): Gra
     }
   }
 
-  // União-busca pra garantir conectividade.
+  // Union-find to guarantee connectivity.
   const parent = nodes.map((_, i) => i);
   const find = (x: number): number => (parent[x] === x ? x : (parent[x] = find(parent[x])));
 
@@ -42,7 +42,7 @@ export function generateProceduralGraph(rng: Rng, params: GridParams = CFG): Gra
   interface Candidate {
     a: number;
     b: number;
-    /** Ruas da borda externa nunca são removidas. */
+    /** Streets on the outer border are never removed. */
     onBorder: boolean;
   }
   const candidates: Candidate[] = [];

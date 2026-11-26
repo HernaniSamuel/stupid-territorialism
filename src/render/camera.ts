@@ -4,20 +4,20 @@ export interface Camera {
   x: number;
   y: number;
   zoom: number;
-  /** Zoom que a câmera está perseguindo (a roda do mouse mexe nele). */
+  /** The zoom the camera is chasing (the mouse wheel changes it). */
   zoomTarget: number;
-  /** Visão geral do mapa inteiro (tecla M). */
+  /** Overview of the whole map (M key). */
   overview: boolean;
-  /** Depois que a pessoa mexe no zoom, paramos de ajustá-lo sozinhos ao tamanho da tela. */
+  /** Once the person changes the zoom, we stop adjusting it automatically to the screen size. */
   userZoomed: boolean;
 }
 
 const DEFAULT_ZOOM = 1.35;
 const MIN_ZOOM = 0.6;
 const MAX_ZOOM = 2.2;
-/** Zoom mínimo do ajuste automático (telefone deitado, ~390 px de altura). */
+/** Minimum zoom for automatic adjustment (phone in landscape, ~390 px tall). */
 const MIN_AUTO_ZOOM = 0.75;
-/** Altura de tela (px) a partir da qual o zoom padrão pode ser o máximo. */
+/** Screen height (px) from which the default zoom can be the maximum. */
 const AUTO_ZOOM_REF_HEIGHT = 520;
 
 export function createCamera(): Camera {
@@ -25,28 +25,28 @@ export function createCamera(): Camera {
 }
 
 /**
- * Zoom padrão pra uma tela de altura `viewH`: telas pequenas (telefone deitado) afastam um pouco
- * pra enxergar mais do mapa. Em monitores comuns dá o mesmo `DEFAULT_ZOOM` de sempre.
+ * Default zoom for a screen of height `viewH`: small screens (phone in landscape) zoom out a bit
+ * to see more of the map. On regular monitors it gives the same `DEFAULT_ZOOM` as always.
  */
 export function autoZoom(viewH: number): number {
   return Math.min(DEFAULT_ZOOM, Math.max(MIN_AUTO_ZOOM, viewH / AUTO_ZOOM_REF_HEIGHT));
 }
 
-/** Centraliza no jogador e sai da visão geral (início de partida). */
+/** Centers on the player and leaves the overview (start of a match). */
 export function resetCamera(cam: Camera, focus: Vec): void {
   cam.x = focus.x;
   cam.y = focus.y;
   cam.overview = false;
 }
 
-/** Roda do mouse: aproxima (`deltaY` < 0) ou afasta. */
+/** Mouse wheel: zooms in (`deltaY` < 0) or out. */
 export function zoomBy(cam: Camera, deltaY: number): void {
   cam.overview = false;
   cam.userZoomed = true;
   cam.zoomTarget = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, cam.zoomTarget * (deltaY < 0 ? 1.1 : 0.91)));
 }
 
-/** Suaviza a câmera em direção ao jogador, ou ao centro do mapa na visão geral. */
+/** Smooths the camera toward the player, or toward the map center in the overview. */
 export function updateCamera(cam: Camera, state: GameState, dt: number, viewW: number, viewH: number): void {
   const { bounds } = state.world;
   if (!cam.userZoomed) cam.zoomTarget = autoZoom(viewH);
@@ -59,7 +59,7 @@ export function updateCamera(cam: Camera, state: GameState, dt: number, viewW: n
   cam.y += (ty - cam.y) * k;
 }
 
-/** Converte um ponto da tela (px) em coordenadas do mundo. */
+/** Converts a screen point (px) into world coordinates. */
 export function screenToWorld(cam: Camera, sx: number, sy: number, viewW: number, viewH: number): Vec {
   return { x: (sx - viewW / 2) / cam.zoom + cam.x, y: (sy - viewH / 2) / cam.zoom + cam.y };
 }

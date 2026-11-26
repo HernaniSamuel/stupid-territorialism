@@ -1,19 +1,19 @@
 /**
- * Busca evolutiva dos parâmetros de uma personalidade de bot.
+ * Evolutionary search of a bot personality's parameters.
  *
- *   npm run evolve                       # 25 gerações a partir do guloso (~15 min)
- *   START=classic GENS=40 npm run evolve # outro ponto de partida / mais gerações
+ *   npm run evolve                       # 25 generations starting from greedy (~15 min)
+ *   START=classic GENS=40 npm run evolve # another starting point / more generations
  *
- * Como funciona (uma Estratégia Evolutiva simples):
- *  1. O "centro" é o vetor de parâmetros atual. Cada geração sorteia POP variações em volta dele (ruído gaussiano
- *     de tamanho σ, que encolhe com o tempo).
- *  2. Cada variação joga partidas de 4 contra os bots de referência (clássico, caçador, cauteloso, guloso),
- *     alternando o canto, e é pontuada pelo território médio que conquista.
- *  3. As melhores viram o novo centro (média delas).
+ * How it works (a simple Evolution Strategy):
+ *  1. The "center" is the current parameter vector. Each generation draws POP variations around it (Gaussian noise
+ *     of size σ, which shrinks over time).
+ *  2. Each variation plays 4-player matches against the reference bots (classic, hunter, cautious, greedy),
+ *     rotating the corner, and is scored by the average territory it conquers.
+ *  3. The best ones become the new center (their average).
  *
- * Contra o ruído e o "decorar as sementes":
- *  - Todos os candidatos de uma geração jogam nas MESMAS sementes (a diferença entre eles é menos ruidosa).
- *  - As sementes mudam a cada geração, e o resultado final é medido em sementes que o treino nunca viu.
+ * Against noise and "memorizing the seeds":
+ *  - All candidates of a generation play on the SAME seeds (the difference between them is less noisy).
+ *  - The seeds change every generation, and the final result is measured on seeds the training never saw.
  */
 import { describe, it } from 'vitest';
 import { CAUTIOUS, CLASSIC, GREEDY, HUNTER, type Personality } from '../src/config';
@@ -27,7 +27,7 @@ interface Gene {
   int?: boolean;
 }
 
-/** O que a evolução pode mexer, com os limites permitidos (planTries tem teto porque custa processamento). */
+/** What evolution may change, with the allowed limits (planTries has a ceiling because it costs processing). */
 const GENES: Gene[] = [
   { key: 'loopMul', min: 0.5, max: 2 },
   { key: 'planTries', min: 14, max: 60, int: true },
@@ -43,12 +43,12 @@ const GENES: Gene[] = [
 
 const GENS = Number(env('GENS', '25'));
 const POP = Number(env('POP', '12'));
-const TRAIN_SEEDS = Number(env('TRAIN_SEEDS', '4')); // cada semente joga com os 4 cantos
+const TRAIN_SEEDS = Number(env('TRAIN_SEEDS', '4')); // each seed plays with all 4 corners
 const SIGMA0 = Number(env('SIGMA0', '0.25'));
 const SIGMA_END = 0.06;
 const EVO_SEED = Number(env('EVO_SEED', '1'));
 const FINAL_SEEDS = Number(env('FINAL_SEEDS', '40'));
-const FINAL_SEED0 = 50000; // longe das sementes de treino (200000+) e das de rodadas anteriores
+const FINAL_SEED0 = 50000; // far from the training seeds (200000+) and from previous runs' seeds
 const START = env('START', 'greedy');
 
 const STARTS: Record<string, Personality> = { classic: CLASSIC, hunter: HUNTER, cautious: CAUTIOUS, greedy: GREEDY };
@@ -78,8 +78,8 @@ interface Fit {
 }
 
 /**
- * Joga `p` contra três dos quatro bots de referência (o que fica de fora gira a cada semente),
- * em cada um dos 4 cantos, e devolve as médias.
+ * Plays `p` against three of the four reference bots (the one left out rotates each seed),
+ * in each of the 4 corners, and returns the averages.
  */
 function evaluate(p: Personality, seeds: number[]): Fit {
   const sum = { share: 0, win: 0, kills: 0, deaths: 0 };
@@ -100,7 +100,7 @@ function evaluate(p: Personality, seeds: number[]): Fit {
   return { share: sum.share / n, win: (100 * sum.win) / n, kills: sum.kills / n, deaths: sum.deaths / n };
 }
 
-/** Quatro personalidades disputando juntas, girando os cantos. Devolve vitória% e território médio de cada uma. */
+/** Four personalities competing together, rotating the corners. Returns each one's win% and average territory. */
 function ffa(lineup: Personality[], seeds: number[]): Map<string, { win: number; share: number }> {
   const acc = new Map<string, { win: number; share: number; n: number }>();
   for (const seed of seeds) {
@@ -118,10 +118,10 @@ function ffa(lineup: Personality[], seeds: number[]): Map<string, { win: number;
   return new Map([...acc].map(([k, t]) => [k, { win: (100 * t.win) / t.n, share: t.share / t.n }]));
 }
 
-describe('evolução de personalidade', () => {
-  it(`evolui a partir de "${START}" por ${GENS} gerações`, () => {
+describe('personality evolution', () => {
+  it(`evolves from "${START}" for ${GENS} generations`, () => {
     const start = STARTS[START];
-    if (!start) throw new Error(`START inválido: ${START}. Use ${Object.keys(STARTS).join(', ')}.`);
+    if (!start) throw new Error(`Invalid START: ${START}. Use ${Object.keys(STARTS).join(', ')}.`);
 
     const rng = createRng(EVO_SEED);
     const gauss = () => Math.sqrt(-2 * Math.log(Math.max(rng(), 1e-12))) * Math.cos(2 * Math.PI * rng());
@@ -131,35 +131,35 @@ describe('evolução de personalidade', () => {
     let center = encode(start);
     let sigma = SIGMA0;
     const t0 = Date.now();
-    console.log(`\nInício: ${START}\n  ${fmt(start)}\n  (${POP} variações/geração, ${TRAIN_SEEDS * 4} partidas por candidato)`);
+    console.log(`\nStart: ${START}\n  ${fmt(start)}\n  (${POP} variations/generation, ${TRAIN_SEEDS * 4} matches per candidate)`);
 
     for (let gen = 0; gen < GENS; gen++) {
       const seeds = Array.from({ length: TRAIN_SEEDS }, (_, i) => 200000 + gen * TRAIN_SEEDS + i);
       const candidates = [
-        center.slice(), // o próprio centro, pra saber como ele anda nas sementes desta geração
+        center.slice(), // the center itself, to see how it does on this generation's seeds
         ...Array.from({ length: POP }, () => center.map((v) => clamp01(v + sigma * gauss()))),
-      ].map((x) => ({ x, fit: evaluate(decode(x, 'candidato'), seeds) }));
+      ].map((x) => ({ x, fit: evaluate(decode(x, 'candidate'), seeds) }));
 
       const ranked = [...candidates].sort((a, b) => b.fit.share - a.fit.share);
       console.log(
-        `ger ${String(gen + 1).padStart(2)}  σ=${sigma.toFixed(3)}  centro ${candidates[0].fit.share.toFixed(1)}%  ` +
-          `melhor ${ranked[0].fit.share.toFixed(1)}%  média ${(candidates.reduce((s, c) => s + c.fit.share, 0) / candidates.length).toFixed(1)}%  ` +
+        `gen ${String(gen + 1).padStart(2)}  σ=${sigma.toFixed(3)}  center ${candidates[0].fit.share.toFixed(1)}%  ` +
+          `best ${ranked[0].fit.share.toFixed(1)}%  mean ${(candidates.reduce((s, c) => s + c.fit.share, 0) / candidates.length).toFixed(1)}%  ` +
           `(${((Date.now() - t0) / 1000).toFixed(0)}s)`,
       );
 
       const top = ranked.slice(0, mu);
       center = center.map((_, j) => top.reduce((s, c) => s + c.x[j], 0) / top.length);
       sigma *= decay;
-      if ((gen + 1) % 5 === 0) console.log(`  centro: ${fmt(decode(center, 'x'))}`);
+      if ((gen + 1) % 5 === 0) console.log(`  center: ${fmt(decode(center, 'x'))}`);
     }
 
-    const champion = decode(center, 'campeão');
-    console.log(`\nCampeão:\n  ${fmt(champion)}`);
+    const champion = decode(center, 'champion');
+    console.log(`\nChampion:\n  ${fmt(champion)}`);
 
-    // Avaliação final em sementes que o treino nunca viu.
+    // Final evaluation on seeds the training never saw.
     const fresh = Array.from({ length: FINAL_SEEDS }, (_, i) => FINAL_SEED0 + i);
-    console.log(`\n=== Avaliação em ${FINAL_SEEDS * 4} partidas inéditas (cada um contra 3 dos 4 bots de referência) ===`);
-    console.log('                território   vitórias   ☠/partida  †/partida');
+    console.log(`\n=== Evaluation on ${FINAL_SEEDS * 4} unseen matches (each against 3 of the 4 reference bots) ===`);
+    console.log('                territory    wins       ☠/match    †/match');
     for (const p of [champion, ...POOL]) {
       const f = evaluate(p, fresh);
       console.log(
@@ -167,8 +167,8 @@ describe('evolução de personalidade', () => {
       );
     }
 
-    console.log('\n=== Os quatro disputando juntos: campeão, caçador, cauteloso, guloso (base 25%) ===');
+    console.log('\n=== The four competing together: champion, hunter, cautious, greedy (base 25%) ===');
     const table = ffa([champion, HUNTER, CAUTIOUS, GREEDY], fresh);
-    for (const [label, t] of table) console.log(`${label.padEnd(14)}  vitórias ${t.win.toFixed(1)}%   território ${t.share.toFixed(1)}%`);
+    for (const [label, t] of table) console.log(`${label.padEnd(14)}  wins ${t.win.toFixed(1)}%   territory ${t.share.toFixed(1)}%`);
   }, 7_200_000);
 });

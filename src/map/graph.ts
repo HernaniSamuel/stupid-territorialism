@@ -1,10 +1,10 @@
 /**
- * Operações sobre o grafo de ruas: vizinhança, caminho mínimo e "o que um laço
- * de bandeiras cerca". Nada aqui conhece agentes ou regras do jogo.
+ * Operations on the street graph: neighborhoods, shortest paths and "what a flag loop
+ * encloses". Nothing here knows about agents or game rules.
  */
 import type { Edge, Face, GNode, Neighbor, ShortestPaths, Vec, World } from '../types';
 
-/** Monta as listas de vizinhos de cada nó, ordenadas por ângulo (necessário pra achar faces). */
+/** Builds each node's neighbor list, sorted by angle (needed to find faces). */
 export function buildAdjacency(nodes: GNode[], edges: Edge[]): Neighbor[][] {
   const adj: Neighbor[][] = nodes.map(() => []);
   for (const [a, b] of edges) {
@@ -18,20 +18,20 @@ export function buildAdjacency(nodes: GNode[], edges: Edge[]): Neighbor[][] {
   return adj;
 }
 
-/** Comprimento da rua a–b, ou 0 se não houver rua. */
+/** Length of the street a–b, or 0 if there is no street. */
 export function edgeLength(world: World, a: number, b: number): number {
   const l = world.adj[a];
   for (let i = 0; i < l.length; i++) if (l[i].to === b) return l[i].len;
   return 0;
 }
 
-/** Quarteirão à esquerda da meia-aresta a→b, se houver. */
+/** City block on the left of the half-edge a→b, if any. */
 export function faceOnSide(world: World, a: number, b: number): Face | undefined {
   const i = world.halfEdgeFace.get(a * world.nodes.length + b);
   return i === undefined ? undefined : world.faces[i];
 }
 
-/** Índice do nó mais próximo do ponto. O(N). */
+/** Index of the node closest to the point. O(N). */
 export function nearestNode(world: World, x: number, y: number): number {
   const nodes = world.nodes;
   let best = 0;
@@ -47,8 +47,8 @@ export function nearestNode(world: World, x: number, y: number): number {
 }
 
 /**
- * Dijkstra a partir de `src`, com cache em `world.paths`.
- * É O(N²) por origem: ótimo para centenas de nós, lento para milhares (use um heap).
+ * Dijkstra from `src`, cached in `world.paths`.
+ * It is O(N²) per source: great for hundreds of nodes, slow for thousands (use a heap).
  */
 export function shortestPaths(world: World, src: number): ShortestPaths {
   const cached = world.paths.get(src);
@@ -82,7 +82,7 @@ export function shortestPaths(world: World, src: number): ShortestPaths {
   return result;
 }
 
-/** Caminho mínimo de nós de `a` até `b`, incluindo os dois. */
+/** Shortest path of nodes from `a` to `b`, including both. */
 export function path(world: World, a: number, b: number): number[] {
   const { prev } = shortestPaths(world, a);
   const p: number[] = [];
@@ -93,7 +93,7 @@ export function path(world: World, a: number, b: number): number[] {
   return p.reverse();
 }
 
-/** Nós percorridos ao ligar as bandeiras em sequência e voltar à primeira (sem repetir o último). */
+/** Nodes walked when connecting the flags in sequence and returning to the first (without repeating the last). */
 export function loopNodes(world: World, flags: number[]): number[] {
   const out: number[] = [];
   for (let i = 0; i < flags.length; i++) {
@@ -103,14 +103,14 @@ export function loopNodes(world: World, flags: number[]): number[] {
   return out;
 }
 
-/** Comprimento total do laço de bandeiras, andando pelas ruas. */
+/** Total length of the flag loop, walking along the streets. */
 export function loopLength(world: World, flags: number[]): number {
   let s = 0;
   for (let i = 0; i < flags.length; i++) s += shortestPaths(world, flags[i]).dist[flags[(i + 1) % flags.length]];
   return s;
 }
 
-/** Ponto dentro de polígono (regra par-ímpar). */
+/** Point inside a polygon (even-odd rule). */
 export function pointInPolygon(p: Vec, poly: Vec[]): boolean {
   let inside = false;
   for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
@@ -121,7 +121,7 @@ export function pointInPolygon(p: Vec, poly: Vec[]): boolean {
   return inside;
 }
 
-/** Quarteirões cercados pelo laço formado por essas bandeiras (precisa de 3 ou mais). */
+/** City blocks enclosed by the loop formed by these flags (needs 3 or more). */
 export function enclosedFaces(world: World, flags: number[]): Face[] {
   if (flags.length < 3) return [];
   const poly = loopNodes(world, flags).map((n) => world.nodes[n]);

@@ -1,13 +1,13 @@
-/** Matemática do joystick virtual. Pura, sem DOM, pra poder ser testada. */
+/** Virtual joystick math. Pure, no DOM, so it can be tested. */
 import type { Vec } from '../types';
 
-/** Fração do raio dentro da qual o polegar ainda não conta como direção (evita tremor). */
+/** Fraction of the radius within which the thumb doesn't count as a direction yet (avoids jitter). */
 export const STICK_DEADZONE = 0.28;
 
 /**
- * Converte o deslocamento do polegar a partir do ponto onde ele pousou em uma direção unitária,
- * igual à do WASD (o jogo anda pelas ruas, então só importa pra onde, não o quanto).
- * Dentro da zona morta devolve (0, 0).
+ * Converts the thumb's displacement from the point where it landed into a unit direction,
+ * the same as WASD (the game moves along streets, so only the direction matters, not the amount).
+ * Inside the dead zone it returns (0, 0).
  */
 export function stickDirection(dx: number, dy: number, radius: number, deadzone = STICK_DEADZONE): Vec {
   const mag = Math.hypot(dx, dy);
@@ -15,7 +15,7 @@ export function stickDirection(dx: number, dy: number, radius: number, deadzone 
   return { x: dx / mag, y: dy / mag };
 }
 
-/** Limita o deslocamento ao raio do joystick (onde desenhar a bolinha). */
+/** Clamps the displacement to the joystick radius (where to draw the knob). */
 export function clampToRadius(dx: number, dy: number, radius: number): Vec {
   const mag = Math.hypot(dx, dy);
   if (mag <= radius) return { x: dx, y: dy };

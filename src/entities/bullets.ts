@@ -1,16 +1,16 @@
 /**
- * Criação e trajetória dos tiros. No modo 'street' o projétil anda pelas ruas,
- * seguindo em frente nos cruzamentos; no modo 'free' voa em linha reta.
- * (Movimento dos projéteis e acertos ficam em `rules/combat.ts`.)
+ * Creation and trajectory of shots. In 'street' mode the projectile travels along the streets,
+ * continuing straight at intersections; in 'free' mode it flies in a straight line.
+ * (Projectile movement and hits live in `rules/combat.ts`.)
  */
 import { CFG } from '../config';
 import type { Agent, GameState, Vec, Walker, World } from '../types';
 import { advance, place, type PickFn } from './agent';
 
 /**
- * Continuação "na mesma rua": em cada nó segue a rua que menos desvia da direção
- * atual, desde que a curva seja de até `streetMaxTurn` graus. Lê a direção do
- * walker no momento da chamada, por isso devolve uma função.
+ * "Same street" continuation: at each node it follows the street that deviates least from the
+ * current direction, as long as the turn is up to `streetMaxTurn` degrees. It reads the direction of the
+ * walker at the time of the call, which is why it returns a function.
  */
 export function pickStraight(world: World, w: Walker): PickFn {
   const minCos = Math.cos((CFG.streetMaxTurn * Math.PI) / 180);
@@ -40,8 +40,8 @@ export function pickStraight(world: World, w: Walker): PickFn {
 }
 
 /**
- * Pontos por onde um projétil 'street' passaria saindo de `start`, até `range` pixels,
- * seguindo em frente nos cruzamentos. Não altera `start`.
+ * Points a 'street' projectile would pass through leaving `start`, up to `range` pixels,
+ * continuing straight at intersections. Does not change `start`.
  */
 export function tracePath(world: World, start: Walker, range: number): Vec[] {
   const probe: Walker = { a: start.a, b: start.b, d: start.d, mv: start.mv, x: start.x, y: start.y };
@@ -59,14 +59,14 @@ export function tracePath(world: World, start: Walker, range: number): Vec[] {
   return pts;
 }
 
-/** Pontos por onde um tiro 'street' disparado agora por `ag` passaria (prévia e mira dos bots). */
+/** Points a 'street' shot fired right now by `ag` would pass through (preview and bot aiming). */
 export function traceShot(world: World, ag: Agent): Vec[] {
   return tracePath(world, { a: ag.a, b: ag.b, d: ag.d, mv: ag.face, x: ag.x, y: ag.y }, CFG.streetRange);
 }
 
 /**
- * Dispara, se a recarga permitir. No modo 'street' ignora `tx`/`ty`;
- * no 'free' mira nesse ponto com um erro de `err` radianos.
+ * Fires, if the reload allows it. In 'street' mode it ignores `tx`/`ty`;
+ * in 'free' mode it aims at that point with an error of `err` radians.
  */
 export function shoot(state: GameState, ag: Agent, tx = 0, ty = 0, err = 0): void {
   if (ag.cd > 0 || !ag.alive) return;

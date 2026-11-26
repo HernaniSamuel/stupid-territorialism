@@ -18,10 +18,10 @@ function isConnected(nodeCount: number, edges: [number, number][]): boolean {
   return seen.size === nodeCount;
 }
 
-describe('mapa procedural', () => {
+describe('procedural map', () => {
   const seeds = [1, 2, 3, 42, 1234, 99999];
 
-  it.each(seeds)('seed %i: grafo conexo, sem arestas repetidas e com quarteirões', (seed) => {
+  it.each(seeds)('seed %i: connected graph, no repeated edges, with blocks', (seed) => {
     const rng = createRng(seed);
     const graph = generateProceduralGraph(rng);
     expect(graph.nodes).toHaveLength(CFG.cols * CFG.rows);
@@ -32,12 +32,12 @@ describe('mapa procedural', () => {
 
     const world = buildWorld(graph, rng);
     expect(world.faces.length).toBeGreaterThan(50);
-    // Cada quarteirão tem área positiva e a soma bate com o total.
+    // Each block has positive area and the sum matches the total.
     for (const f of world.faces) expect(f.area).toBeGreaterThan(0);
     expect(world.faces.reduce((s, f) => s + f.area, 0)).toBeCloseTo(world.totalArea);
   });
 
-  it('a mesma semente gera o mesmo mapa; sementes diferentes, mapas diferentes', () => {
+  it('the same seed generates the same map; different seeds, different maps', () => {
     const a = generateProceduralGraph(createRng(7));
     const b = generateProceduralGraph(createRng(7));
     const c = generateProceduralGraph(createRng(8));
@@ -47,7 +47,7 @@ describe('mapa procedural', () => {
 });
 
 describe('rng', () => {
-  it('produz valores em [0, 1) e é determinístico', () => {
+  it('produces values in [0, 1) and is deterministic', () => {
     const a = createRng(5);
     const b = createRng(5);
     for (let i = 0; i < 1000; i++) {
@@ -58,7 +58,7 @@ describe('rng', () => {
     }
   });
 
-  it('shuffle só reordena os elementos', () => {
+  it('shuffle only reorders the elements', () => {
     const arr = Array.from({ length: 50 }, (_, i) => i);
     const copy = [...arr];
     shuffle(copy, createRng(3));

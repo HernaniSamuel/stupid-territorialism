@@ -3,11 +3,11 @@ import { shoot, traceShot } from '../entities/bullets';
 import type { Agent, GameState } from '../types';
 
 /**
- * Decide se o bot atira neste frame.
+ * Decides whether the bot shoots this frame.
  *
- * Modo 'street': simula o próprio tiro e só dispara se ele passaria por um
- * inimigo (o bot não "mira": só atira quando calha de estar alinhado pela rua).
- * Modo 'free': mira no inimigo mais próximo dentro de `botSight`, com antecipação e erro.
+ * 'street' mode: simulates its own shot and only fires if it would pass through an
+ * enemy (the bot doesn't "aim": it only shoots when it happens to be lined up along the street).
+ * 'free' mode: aims at the nearest enemy within `botSight`, with lead and error.
  */
 export function botCombat(state: GameState, bot: Agent): void {
   if (bot.cd > 0) return;

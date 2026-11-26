@@ -1,119 +1,119 @@
 /**
- * Parâmetros de jogo. Mexa à vontade pra testar o "fun".
- * Unidades: distâncias em pixels de mundo, tempos em segundos, velocidades em px/s.
+ * Game parameters. Feel free to tweak them to test the "fun".
+ * Units: distances in world pixels, times in seconds, speeds in px/s.
  */
 
-/** 'street': o tiro sai pra frente seguindo a rua. 'free': linha reta na direção do mouse. */
+/** 'street': the shot goes forward following the street. 'free': straight line in the direction of the mouse. */
 export type ShotMode = 'street' | 'free';
 
 export interface Config {
-  // --- mapa procedural -------------------------------------------------------
-  /** Colunas da grade de cruzamentos. */
+  // --- procedural map --------------------------------------------------------
+  /** Columns of the intersection grid. */
   cols: number;
-  /** Linhas da grade de cruzamentos. */
+  /** Rows of the intersection grid. */
   rows: number;
-  /** Distância média entre cruzamentos vizinhos. */
+  /** Average distance between neighboring intersections. */
   sp: number;
-  /** Quanto cada cruzamento interno é deslocado (fração de `sp`). */
+  /** How much each inner intersection is displaced (fraction of `sp`). */
   jit: number;
-  /** Chance de manter cada rua da grade (as removidas só voltam se isolarem o mapa). */
+  /** Chance of keeping each street of the grid (removed ones only come back if they isolate the map). */
   keepEdge: number;
-  /** Chance de cada quarteirão ganhar uma rua diagonal. */
+  /** Chance of each block getting a diagonal street. */
   diag: number;
-  /** Chance de um quarteirão ser um parque (só muda a cor). */
+  /** Chance of a block being a park (only changes the color). */
   parkP: number;
-  /** Quarteirões menores que isso (em px²) são ignorados. Depende da escala do mapa. */
+  /** Blocks smaller than this (in px²) are ignored. Depends on the map scale. */
   minFaceArea: number;
 
-  // --- movimento -------------------------------------------------------------
-  /** Velocidade do jogador. */
+  // --- movement --------------------------------------------------------------
+  /** Player speed. */
   speed: number;
-  /** Velocidade dos bots. */
+  /** Bot speed. */
   botSpeed: number;
-  /** Multiplicador de velocidade quando se está andando em território próprio. */
+  /** Speed multiplier when walking on your own territory. */
   ownBonus: number;
 
-  // --- partida ---------------------------------------------------------------
-  /** Máximo de bandeiras na cadeia de cada jogador. */
+  // --- match -----------------------------------------------------------------
+  /** Maximum number of flags in each player's chain. */
   maxFlags: number;
-  /** Quantidade de bots (máximo 3: há 4 cantos de spawn). */
+  /** Number of bots (maximum 3: there are 4 spawn corners). */
   botCount: number;
-  /** Duração da partida. */
+  /** Match duration. */
   round: number;
-  /** Porcentagem do mapa que encerra a partida com vitória antecipada. */
+  /** Percentage of the map that ends the match with an early victory. */
   winPct: number;
-  /** Distância máxima do cruzamento pra conseguir fincar uma bandeira. */
+  /** Maximum distance from an intersection to be able to plant a flag. */
   plantReach: number;
 
-  // --- tiro ------------------------------------------------------------------
+  // --- shooting --------------------------------------------------------------
   shotMode: ShotMode;
-  /** (free) velocidade do projétil. */
+  /** (free) projectile speed. */
   bulletSpeed: number;
-  /** (free) alcance do projétil. */
+  /** (free) projectile range. */
   bulletRange: number;
-  /** Recarga do jogador. */
+  /** Player reload. */
   shotCd: number;
-  /** Recarga dos bots. */
+  /** Bot reload. */
   botShotCd: number;
-  /** (free) erro de mira dos bots, em radianos. */
+  /** (free) bots' aiming error, in radians. */
   botAimErr: number;
-  /** (free) distância máxima em que um bot enxerga alvos. */
+  /** (free) maximum distance at which a bot can see targets. */
   botSight: number;
-  /** (street) alcance do tiro pela rua. */
+  /** (street) shot range along the street. */
   streetRange: number;
-  /** (street) velocidade do projétil. */
+  /** (street) projectile speed. */
   streetBulletSpeed: number;
-  /** (street) curva máxima, em graus, que o tiro aceita ao passar por um cruzamento. */
+  /** (street) maximum turn, in degrees, the shot accepts when passing an intersection. */
   streetMaxTurn: number;
 
-  // --- combate e regras ------------------------------------------------------
-  /** Raio de acerto de um tiro num agente. */
+  // --- combat and rules ------------------------------------------------------
+  /** Hit radius of a shot on an agent. */
   hitR: number;
-  /** Raio em que encostar numa bandeira inimiga destrói a cadeia dela. */
+  /** Radius within which touching an enemy flag destroys its chain. */
   flagR: number;
-  /** Tempo morto até renascer. */
+  /** Dead time until respawning. */
   respawn: number;
-  /** Invulnerabilidade depois de renascer. */
+  /** Invulnerability after respawning. */
   invuln: number;
 
   // --- bots ------------------------------------------------------------------
-  /** 'smart': cada bot tem uma personalidade e reage ao jogo. 'classic': todos iguais, sem reação (comportamento antigo). */
+  /** 'smart': each bot has a personality and reacts to the game. 'classic': all identical, no reaction (old behavior). */
   botBrain: 'smart' | 'classic';
-  /** Perímetro máximo (em px) de um laço planejado por um bot (multiplicado por `loopMul` da personalidade). */
+  /** Maximum perimeter (in px) of a loop planned by a bot (multiplied by the personality's `loopMul`). */
   botMaxLoop: number;
-  /** Só considera bandeiras inimigas a até essa distância de rua. */
+  /** Only considers enemy flags within this street distance. */
   botFlagRange: number;
-  /** Um inimigo a menos que isso (px) de uma bandeira plantada de um bot aciona a defesa. */
+  /** An enemy closer than this (px) to a bot's planted flag triggers the defense. */
   botDefendRange: number;
-  /** Quantos passos de rota um bot dá a cada vez que vai interceptar um inimigo. */
+  /** How many route steps a bot takes each time it goes to intercept an enemy. */
   botInterceptSteps: number;
 }
 
 /**
- * Jeito de jogar de um bot. Todos os campos são "o quanto", então dá pra criar
- * variações misturando valores. `CLASSIC` reproduz o comportamento original.
+ * A bot's way of playing. All fields are "how much", so you can create
+ * variations by mixing values. `CLASSIC` reproduces the original behavior.
  */
 export interface Personality {
   label: string;
-  /** Multiplica `botMaxLoop`: laços maiores rendem mais, mas deixam as bandeiras expostas por mais tempo. */
+  /** Multiplies `botMaxLoop`: bigger loops pay more, but leave flags exposed for longer. */
   loopMul: number;
-  /** Quantos laços aleatórios avalia ao planejar uma conquista. */
+  /** How many random loops it evaluates when planning a conquest. */
   planTries: number;
-  /** Quanto penaliza laços com inimigos perto das bandeiras (0 = ignora o risco). */
+  /** How much it penalizes loops with enemies near the flags (0 = ignores risk). */
   riskWeight: number;
-  /** Multiplicador do ganho de quarteirões que já são de outro (1 = sem preferência por roubar). */
+  /** Gain multiplier for blocks already owned by someone else (1 = no preference for stealing). */
   stealBonus: number;
-  /** Atenção extra ao líder do placar ao roubar, caçar bandeiras e perseguir (0 = ignora quem lidera). */
+  /** Extra attention to the scoreboard leader when stealing, hunting flags and chasing (0 = ignores the leader). */
   leaderBias: number;
-  /** Chance, ao decidir, de ir atrás de uma bandeira inimiga. */
+  /** Chance, when deciding, of going after an enemy flag. */
   huntFlagP: number;
-  /** Chance, ao decidir, de perseguir um inimigo (somada à de cima). */
+  /** Chance, when deciding, of chasing an enemy (added to the one above). */
   chaseP: number;
-  /** Quantos passos da rota de perseguição ele segue antes de reavaliar. */
+  /** How many steps of the chase route it follows before reassessing. */
   chaseSteps: number;
-  /** 0..1: chance de desviar quando a rua que ia pegar está na linha de fogo de alguém. */
+  /** 0..1: chance of dodging when the street it was going to take is in someone's line of fire. */
   dodge: number;
-  /** 0..1: chance de largar o plano e ir atrás de um inimigo que chegou perto das suas bandeiras. */
+  /** 0..1: chance of dropping the plan and going after an enemy who came close to its flags. */
   defend: number;
 }
 
@@ -160,9 +160,9 @@ export const CFG: Config = {
   botInterceptSteps: 2,
 };
 
-/** O comportamento original dos bots: sem reação, sem risco, todos iguais. */
+/** The original bot behavior: no reaction, no risk, all identical. */
 export const CLASSIC: Personality = {
-  label: 'clássico',
+  label: 'classic',
   loopMul: 1,
   planTries: 14,
   riskWeight: 0,
@@ -176,14 +176,14 @@ export const CLASSIC: Personality = {
 };
 
 /**
- * Base dos bots 'smart': a média de duas buscas evolutivas (`npm run evolve`) que partiram de pontos bem diferentes
- * (do guloso e do clássico) e chegaram a regiões parecidas. Em partidas inéditas ganha ~83% contra o clássico e ~60%
- * contra a versão anterior do melhor bot. O que convergiu: planejar com ~50 tentativas, dar bastante peso ao risco,
- * preferir roubar, laços moderados e pouca caça a bandeiras. Detalhes em docs/BOTS.md.
+ * Base for 'smart' bots: the average of two evolutionary searches (`npm run evolve`) that started from very different points
+ * (the greedy one and the classic one) and reached similar regions. In unseen matches it wins ~83% against the classic and ~60%
+ * against the previous version of the best bot. What converged: planning with ~50 attempts, giving a lot of weight to risk,
+ * preferring to steal, moderate loops and little flag hunting. Details in docs/BOTS.md.
  */
 const SMART: Personality = {
   ...CLASSIC,
-  label: 'inteligente',
+  label: 'smart',
   loopMul: 1.2,
   planTries: 50,
   riskWeight: 2.1,
@@ -196,10 +196,10 @@ const SMART: Personality = {
   defend: 0.3,
 };
 
-/** Vai atrás de bandeiras e de quem lidera, persegue de leve e defende as próprias bandeiras de quem se aproxima. */
+/** Goes after flags and whoever is leading, chases lightly and defends its own flags from anyone approaching. */
 export const HUNTER: Personality = {
   ...SMART,
-  label: 'caçador',
+  label: 'hunter',
   leaderBias: 1,
   huntFlagP: 0.25,
   chaseP: 0.12,
@@ -207,30 +207,30 @@ export const HUNTER: Personality = {
   defend: 0.45,
 };
 
-/** Laços menores e bem longe dos inimigos, e quase sempre desvia de tiro. */
+/** Smaller loops, far from enemies, and almost always dodges shots. */
 export const CAUTIOUS: Personality = {
   ...SMART,
-  label: 'cauteloso',
+  label: 'cautious',
   loopMul: 1.05,
   riskWeight: 2.8,
   dodge: 0.9,
 };
 
-/** Laços grandes: busca muito território de uma vez. */
+/** Large loops: goes for a lot of territory at once. */
 export const GREEDY: Personality = {
   ...SMART,
-  label: 'guloso',
+  label: 'greedy',
   loopMul: 1.35,
   stealBonus: 1.6,
 };
 
-/** Personalidade de cada bot quando `CFG.botBrain` é 'smart', na ordem dos ids 1, 2, 3. */
+/** Personality of each bot when `CFG.botBrain` is 'smart', in the order of ids 1, 2, 3. */
 export const BOT_LINEUP: Personality[] = [HUNTER, CAUTIOUS, GREEDY];
 
-/** Times, na ordem dos ids de agente: 0 é o jogador humano. */
+/** Teams, in agent id order: 0 is the human player. */
 export const TEAMS = [
-  { name: 'Você', color: '#1a73e8' },
-  { name: 'Vermelho', color: '#ea4335' },
-  { name: 'Roxo', color: '#9334e6' },
-  { name: 'Laranja', color: '#f29900' },
+  { name: 'You', color: '#1a73e8' },
+  { name: 'Red', color: '#ea4335' },
+  { name: 'Purple', color: '#9334e6' },
+  { name: 'Orange', color: '#f29900' },
 ] as const;

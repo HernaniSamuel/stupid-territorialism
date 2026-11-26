@@ -1,9 +1,9 @@
 /**
- * Controles de toque (telefone/tablet, deitado): joystick flutuante à esquerda, botões de
- * atirar e fincar bandeira à direita, e botões pequenos de mapa, som, reiniciar e tela cheia.
+ * Touch controls (phone/tablet, landscape): floating joystick on the left, shoot and
+ * plant-flag buttons on the right, and small map, sound, restart and fullscreen buttons.
  *
- * Gera as mesmas coisas que o teclado (direção, "atirando", ações), então a simulação não
- * sabe a diferença. O HTML dos controles está em index.html; o visual, em styles/touch.css.
+ * They produce the same things as the keyboard (direction, "shooting", actions), so the simulation
+ * doesn't know the difference. The controls' HTML is in index.html; the look is in styles/touch.css.
  */
 import type { Vec } from '../types';
 import { clampToRadius, stickDirection } from './stick';
@@ -16,27 +16,27 @@ export interface TouchActions {
 }
 
 export interface TouchControls {
-  /** Direção do joystick (unitária) ou (0, 0). */
+  /** Joystick direction (unit) or (0, 0). */
   dir(): Vec;
-  /** O botão de atirar está pressionado? */
+  /** Is the shoot button pressed? */
   firing(): boolean;
-  /** O aparelho usa toque (controles visíveis)? */
+  /** Does the device use touch (controls visible)? */
   readonly active: boolean;
 }
 
-/** Raio do joystick em px: até onde a bolinha vai. */
+/** Joystick radius in px: how far the knob can travel. */
 const STICK_RADIUS = 56;
 
 function el(id: string): HTMLElement {
   const e = document.getElementById(id);
-  if (!e) throw new Error(`Elemento #${id} não encontrado no HTML`);
+  if (!e) throw new Error(`Element #${id} not found in the HTML`);
   return e;
 }
 
 /**
- * Liga um botão por pointer events: `onPress` roda ao tocar. Os ids dos dedos que estão
- * segurando ficam em `held` (se informado), pra saber se o botão segue pressionado, inclusive
- * com vários dedos ao mesmo tempo (andar com um polegar e atirar com o outro).
+ * Binds a button via pointer events: `onPress` runs on touch. The ids of the fingers that are
+ * holding it are kept in `held` (if given), to know whether the button is still pressed, even
+ * with several fingers at once (walk with one thumb and shoot with the other).
  */
 function bindButton(btn: HTMLElement, onPress?: () => void, held?: Set<number>): void {
   btn.addEventListener('pointerdown', (e) => {
@@ -62,7 +62,7 @@ export function createTouchControls(actions: TouchActions): TouchControls {
     active = true;
     root.classList.add('touch');
   };
-  // Aparelho de toque de cara; aparelho híbrido (notebook com tela) ativa no primeiro toque.
+  // Touch device from the start; hybrid device (laptop with touchscreen) enables it on the first touch.
   if (matchMedia('(pointer: coarse)').matches) enable();
   addEventListener(
     'pointerdown',
@@ -72,13 +72,13 @@ export function createTouchControls(actions: TouchActions): TouchControls {
     { capture: true },
   );
 
-  // O Safari do iPhone ignora o `user-scalable=no`: o zoom por pinça precisa ser barrado aqui.
+  // iPhone Safari ignores `user-scalable=no`: pinch zoom has to be blocked here.
   document.addEventListener('gesturestart', (e) => e.preventDefault());
 
-  // Segurar o dedo não pode abrir menu de contexto nem selecionar nada.
+  // Holding a finger must not open the context menu or select anything.
   el('touch').addEventListener('contextmenu', (e) => e.preventDefault());
 
-  // --- joystick flutuante: aparece onde o polegar pousar, na metade esquerda da tela ---
+  // --- floating joystick: appears wherever the thumb lands, in the left half of the screen ---
   const zone = el('stickZone');
   const base = el('stickBase');
   const knob = el('stickKnob');
@@ -102,7 +102,7 @@ export function createTouchControls(actions: TouchActions): TouchControls {
   };
 
   zone.addEventListener('pointerdown', (e) => {
-    if (stickId !== -1) return; // já há um dedo no joystick
+    if (stickId !== -1) return; // a finger is already on the joystick
     e.preventDefault();
     stickId = e.pointerId;
     zone.setPointerCapture(e.pointerId);
@@ -119,7 +119,7 @@ export function createTouchControls(actions: TouchActions): TouchControls {
     zone.addEventListener(type, (e) => endStick(e as PointerEvent));
   }
 
-  // --- botões ---
+  // --- buttons ---
   const fireHeld = new Set<number>();
   bindButton(el('btnFire'), undefined, fireHeld);
   bindButton(el('btnPlant'), actions.onPlant);
@@ -127,8 +127,8 @@ export function createTouchControls(actions: TouchActions): TouchControls {
   bindButton(el('btnSound'), actions.onToggleMute);
   bindButton(el('btnRestart'), actions.onRestart);
 
-  // Tela cheia: esconde a barra do navegador e (no Android) permite travar em paisagem.
-  // Precisa ser pedida num `click`: é um gesto que o navegador aceita pra isso (pointerdown de toque, não).
+  // Fullscreen: hides the browser bar and (on Android) allows locking to landscape.
+  // Must be requested on a `click`: it's a gesture the browser accepts for this (a touch pointerdown isn't).
   const full = el('btnFull');
   full.hidden = !document.fullscreenEnabled;
   full.addEventListener('click', () => {
@@ -138,7 +138,7 @@ export function createTouchControls(actions: TouchActions): TouchControls {
     }
     void document.documentElement.requestFullscreen().then(
       () => {
-        // `lock` não está nos tipos do TypeScript; só alguns navegadores (Android) o aceitam.
+        // `lock` is not in the TypeScript types; only some browsers (Android) accept it.
         const orientation = screen.orientation as unknown as { lock?: (o: string) => Promise<void> };
         void orientation.lock?.('landscape')?.catch(() => {});
       },

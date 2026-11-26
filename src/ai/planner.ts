@@ -3,21 +3,21 @@ import { enclosedFaces, loopLength, nearestNode, shortestPaths } from '../map/gr
 import { leader } from '../rules/match';
 import type { Agent, GameState } from '../types';
 
-/** Janela (em px) em volta do bot onde sorteamos o centro de cada laço candidato. */
+/** Window (in px) around the bot where we draw the center of each candidate loop. */
 const SEARCH_W = 600;
 const SEARCH_H = 450;
-/** Raio do laço candidato: entre MIN e MIN+SPAN. */
+/** Radius of the candidate loop: between MIN and MIN+SPAN. */
 const RADIUS_MIN = 70;
 const RADIUS_SPAN = 120;
 
-/** Um inimigo a menos que isso (px) de uma bandeira do laço começa a pesar como risco. */
+/** An enemy closer than this (px) to a flag of the loop starts to weigh as risk. */
 const RISK_RADIUS = 300;
-/** Quanto custa (em px de perímetro equivalente) ter um inimigo colado numa bandeira. */
+/** How much (in px of equivalent perimeter) having an enemy stuck to a flag costs. */
 const RISK_COST = 300;
 
 /**
- * Risco de um laço: soma, por par (inimigo vivo, bandeira), de quão perto o inimigo está.
- * Chegar a uma bandeira destrói a cadeia inteira, então laços com adversários por perto valem menos.
+ * Risk of a loop: sums, for each pair (living enemy, flag), how close the enemy is.
+ * Reaching a flag destroys the entire chain, so loops with opponents nearby are worth less.
  */
 function loopRisk(state: GameState, bot: Agent, flags: number[]): number {
   let risk = 0;
@@ -32,12 +32,12 @@ function loopRisk(state: GameState, bot: Agent, flags: number[]): number {
 }
 
 /**
- * Planeja uma conquista: sorteia `persona.planTries` laços de 3 a 5 bandeiras
- * perto do bot e fica com o de melhor `ganho / (perímetro + distância·0,6 + 200 + risco)`.
+ * Plans a conquest: draws `persona.planTries` loops of 3 to 5 flags
+ * near the bot and keeps the one with the best `gain / (perimeter + distance·0.6 + 200 + risk)`.
  *
- * @param node nó em que o bot está agora
- * @returns bandeiras a fincar, já começando pela mais próxima e terminando de
- *   novo nela (pra fechar o laço); ou `null` se nada rendeu ganho.
+ * @param node the node the bot is at right now
+ * @returns flags to plant, starting from the nearest one and ending back
+ *   at it (to close the loop); or `null` if nothing yielded a gain.
  */
 export function planClaim(state: GameState, bot: Agent, node: number): number[] | null {
   const { world, rng } = state;
@@ -66,7 +66,7 @@ export function planClaim(state: GameState, bot: Agent, node: number): number[] 
     let gain = 0;
     for (const f of enclosedFaces(world, flags)) {
       if (f.owner === bot.id) continue;
-      // Roubar vale mais que tomar terra livre; do líder, mais ainda.
+      // Stealing is worth more than taking free land; from the leader, even more.
       const steal = f.owner < 0 ? 1 : persona.stealBonus * (f.owner === lead?.id ? 1 + persona.leaderBias * 0.5 : 1);
       gain += f.area * steal;
     }
@@ -81,7 +81,7 @@ export function planClaim(state: GameState, bot: Agent, node: number): number[] 
   }
   if (!best) return null;
 
-  // Começa pela bandeira mais próxima de quem vai fincar.
+  // Start from the flag closest to whoever is going to plant it.
   const chosen = best;
   const fromHere = shortestPaths(world, node).dist;
   let start = 0;

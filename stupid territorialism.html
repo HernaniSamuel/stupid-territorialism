@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -45,30 +45,30 @@ canvas{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:crossh
 <div class="card" id="board"></div>
 <div class="card" id="bottom">
   <span id="pips"></span>
-  <span><b>WASD</b> andar</span>
+  <span><b>WASD</b> move</span>
   <span id="hintShoot"></span>
-  <span><b>botão direito</b> fincar bandeira (3+, volte à 1ª pra fechar)</span>
-  <span><b>M</b> mapa · <b>R</b> reiniciar · <b>N</b> som</span>
+  <span><b>right button</b> plant flag (3+, return to the 1st to close)</span>
+  <span><b>M</b> map · <b>R</b> restart · <b>N</b> sound</span>
 </div>
 <div id="toast"></div>
 <div id="dead"></div>
-<div id="end"><div class="box"><h2 id="endT"></h2><div id="endL"></div><p>Aperte <b>R</b> pra jogar de novo (novo mapa)</p></div></div>
+<div id="end"><div class="box"><h2 id="endT"></h2><div id="endL"></div><p>Press <b>R</b> to play again (new map)</p></div></div>
 
 <script>
 (()=>{
-// ================= CONFIG (mexa à vontade pra testar o "fun") =================
+// ================= CONFIG (feel free to tweak to test the "fun") =================
 const CFG={
   cols:13, rows:9, sp:96, jit:0.2, keepEdge:0.9, diag:0.14, parkP:0.12,
   speed:150, botSpeed:132, ownBonus:1.2,
   maxFlags:6, botCount:3, round:240, winPct:50,
   bulletSpeed:700, bulletRange:330, shotCd:0.45, botShotCd:1.0, botAimErr:0.14, botSight:250,
   hitR:12, flagR:14, respawn:3, invuln:1.6, botMaxLoop:950,
-  // 'street' = tiro sai pra frente pela rua (WASD + espaço); 'free' = tiro em linha reta com mira do mouse
+  // 'street' = shot goes forward along the street (WASD + space); 'free' = straight shot aimed with the mouse
   shotMode:'street', streetRange:300, streetBulletSpeed:420, streetMaxTurn:35
 };
-const COLORS=[{n:'Você',c:'#1a73e8'},{n:'Vermelho',c:'#ea4335'},{n:'Roxo',c:'#9334e6'},{n:'Laranja',c:'#f29900'}];
+const COLORS=[{n:'You',c:'#1a73e8'},{n:'Red',c:'#ea4335'},{n:'Purple',c:'#9334e6'},{n:'Orange',c:'#f29900'}];
 
-// ================= estado =================
+// ================= state =================
 const cv=document.getElementById('c'),ctx=cv.getContext('2d');
 let W=0,H=0,dpr=1;
 function resize(){dpr=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;cv.width=W*dpr;cv.height=H*dpr}
@@ -78,7 +78,7 @@ let nodes,adj,edges,faces,hf,spc,agents,bullets,parts,player,timeLeft,over,total
 let cam={x:0,y:0},zoom=1.35,zoomT=1.35,overview=false;
 const rnd=Math.random;
 
-// ================= geração do mapa =================
+// ================= map generation =================
 function genMap(){
   const {cols,rows,sp}=CFG;
   nodes=[];edges=[];spc=new Map();
@@ -111,7 +111,7 @@ function genMap(){
     adj[b].push({to:a,len,ang:Math.atan2(-dy,-dx)});
   }
   adj.forEach(l=>l.sort((p,q)=>p.ang-q.ang));
-  // faces (quarteirões) por travessia de meias-arestas
+  // faces (city blocks) by traversing half-edges
   const vis=new Set(),raw=[];
   for(let u=0;u<N;u++)for(const e of adj[u]){
     const v0=e.to;if(vis.has(u*N+v0))continue;
@@ -143,7 +143,7 @@ function genMap(){
   map={x0,y0,x1,y1,cx:(x0+x1)/2,cy:(y0+y1)/2,w:x1-x0,h:y1-y0};
 }
 
-// ================= grafo utilidades =================
+// ================= graph utilities =================
 function elen(a,b){const l=adj[a];for(let i=0;i<l.length;i++)if(l[i].to===b)return l[i].len;return 0}
 function nearestNode(x,y){let b=0,bd=1e12;for(let i=0;i<nodes.length;i++){const d=(nodes[i].x-x)**2+(nodes[i].y-y)**2;if(d<bd){bd=d;b=i}}return b}
 function sp(src){
@@ -167,7 +167,7 @@ function enclosed(fl){
   return faces.filter(f=>pip(f.probe,poly));
 }
 
-// ================= agentes =================
+// ================= agents =================
 function makeAgent(id,human){
   const base=[[60,map.y1-40],[map.x1-60,map.y0+40],[60,map.y0+40],[map.x1-60,map.y1-40]][id];
   const n=nearestNode(base[0],base[1]);
@@ -214,12 +214,12 @@ addEventListener('keydown',e=>{
   keys[e.code]=true;
   if(e.code==='KeyR')newGame();
   if(e.code==='KeyM'){overview=!overview}
-  if(e.code==='KeyN'){mute=!mute;say(mute?'Som desligado':'Som ligado',900)}
+  if(e.code==='KeyN'){mute=!mute;say(mute?'Sound off':'Sound on',900)}
 });
 function tryPlant(){
   if(over||!player.alive)return;
   const n=nodeNear(player,30);
-  if(n<0)say('Pare num cruzamento pra fincar a bandeira');else plant(player,n);
+  if(n<0)say('Stop at an intersection to plant the flag');else plant(player,n);
 }
 cv.addEventListener('contextmenu',e=>e.preventDefault());
 addEventListener('keyup',e=>{keys[e.code]=false});
@@ -248,7 +248,7 @@ function pickPlayer(n){
   return best;
 }
 
-// ================= som =================
+// ================= sound =================
 let AC=null,mute=false;
 function beep(f,d,type='square',v=.035,slide=0){
   if(mute)return;
@@ -275,15 +275,15 @@ const $=id=>document.getElementById(id);
 let toastT=0;
 function say(msg,ms=2400){const t=$('toast');t.textContent=msg;t.classList.add('on');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('on'),ms)}
 
-// ================= regras =================
+// ================= rules =================
 function plant(ag,node){
   if(!ag.alive)return false;
   const f=ag.flags;
   if(f.length>=3&&node===f[0]){closeLoop(ag);return true}
-  if(f.includes(node)){if(ag.human)say('Já tem bandeira sua aqui');return false}
-  if(f.length>=CFG.maxFlags){if(ag.human)say(`Máximo de ${CFG.maxFlags} bandeiras – volte à primeira pra fechar`);return false}
+  if(f.includes(node)){if(ag.human)say('You already have a flag here');return false}
+  if(f.length>=CFG.maxFlags){if(ag.human)say(`Maximum of ${CFG.maxFlags} flags – return to the first one to close`);return false}
   f.push(node);sfx('plant',ag);
-  if(ag.human&&f.length===3)say('Agora volte à 1ª bandeira (botão direito) pra fechar o território');
+  if(ag.human&&f.length===3)say('Now return to the 1st flag (right button) to close the territory');
   return true;
 }
 function closeLoop(ag){
@@ -293,23 +293,23 @@ function closeLoop(ag){
   ag.flags=[];
   if(gain>0){
     sfx('claim',ag);
-    if(ag.human)say(`Território fechado! +${(gain/totalArea*100).toFixed(1)}%`);
-    else if(player.alive&&fs.length)say(`${ag.name} tomou território (+${(gain/totalArea*100).toFixed(1)}%)`,1600);
-  }else if(ag.human)say('Nada novo cercado');
+    if(ag.human)say(`Territory closed! +${(gain/totalArea*100).toFixed(1)}%`);
+    else if(player.alive&&fs.length)say(`${ag.name} took territory (+${(gain/totalArea*100).toFixed(1)}%)`,1600);
+  }else if(ag.human)say('Nothing new enclosed');
 }
 function destroyChain(owner,by){
   if(!owner.flags.length)return;
   owner.flags=[];owner.plan=[];owner.route=[];
   sfx('break',by);
-  if(owner.human)say(`${by.name} destruiu suas bandeiras!`);
-  else if(by.human)say(`Você destruiu as bandeiras do ${owner.name}`);
+  if(owner.human)say(`${by.name} destroyed your flags!`);
+  else if(by.human)say(`You destroyed the ${owner.name}'s flags`);
 }
 function kill(v,k){
   if(!v.alive)return;
   v.alive=false;v.respawnT=CFG.respawn;v.flags=[];v.plan=[];v.route=[];v.deaths++;k.kills++;
   for(let i=0;i<16;i++){const a=rnd()*6.283,s=40+rnd()*140;parts.push({x:v.x,y:v.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,life:.6+rnd()*.4,c:v.color})}
   sfx('kill',v);
-  if(v.human)say(`${k.name} te acertou!`);else if(k.human)say(`Você derrubou o ${v.name}`,1400);
+  if(v.human)say(`${k.name} hit you!`);else if(k.human)say(`You took down the ${v.name}`,1400);
 }
 function respawn(ag){
   let cand=[];
@@ -317,7 +317,7 @@ function respawn(ag){
   const n=cand.length?cand[(rnd()*cand.length)|0]:ag.base;
   ag.a=n;ag.b=adj[n][0].to;ag.d=0;ag.mv=0;ag.alive=true;ag.invT=CFG.invuln;ag.cd=.4;place(ag);
 }
-// continuação "na mesma rua": segue a aresta que menos desvia da direção atual (até streetMaxTurn graus)
+// continuation "on the same street": follows the edge that deviates least from the current direction (up to streetMaxTurn degrees)
 function pickStraight(b){
   const min=Math.cos(CFG.streetMaxTurn*Math.PI/180);
   return n=>{
@@ -446,7 +446,7 @@ function update(dt){
       let df=ta-ag.ang;df=Math.atan2(Math.sin(df),Math.cos(df));ag.ang+=df*Math.min(1,dt*14);
     }
   }
-  // bandeiras tocadas por inimigos
+  // flags touched by enemies
   for(const ag of agents){
     if(!ag.alive)continue;
     for(const o of agents){
@@ -454,7 +454,7 @@ function update(dt){
       for(const fn of o.flags)if(Math.hypot(nodes[fn].x-ag.x,nodes[fn].y-ag.y)<CFG.flagR){destroyChain(o,ag);break}
     }
   }
-  // balas
+  // bullets
   for(const b of bullets){
     b.px=b.x;b.py=b.y;
     if(b.street){
@@ -465,14 +465,14 @@ function update(dt){
     }else{b.x+=b.vx*dt;b.y+=b.vy*dt;b.life-=dt}
     for(const ag of agents){
       if(ag===b.owner||!ag.alive||ag.invT>0)continue;
-      // distância ponto-segmento (evita atravessar o alvo)
+      // point-segment distance (avoids passing through the target)
       const sx=b.x-b.px,sy=b.y-b.py,l2=sx*sx+sy*sy||1;
       let t=((ag.x-b.px)*sx+(ag.y-b.py)*sy)/l2;t=Math.max(0,Math.min(1,t));
       if(Math.hypot(b.px+sx*t-ag.x,b.py+sy*t-ag.y)<CFG.hitR){kill(ag,b.owner);b.life=0;break}
     }
   }
   bullets=bullets.filter(b=>b.life>0);
-  // câmera
+  // camera
   const tz=overview?Math.min(W/(map.w+160),H/(map.h+200)):zoomT;
   zoom+=(tz-zoom)*Math.min(1,dt*6);
   const tx=overview?map.cx:player.x,ty=overview?map.cy:player.y;
@@ -507,12 +507,12 @@ function render(t){
   ctx.save();
   ctx.translate(W/2,H/2);ctx.scale(zoom,zoom);ctx.translate(-cam.x,-cam.y);
   ctx.lineCap='round';ctx.lineJoin='round';
-  // quarteirões
+  // city blocks
   for(const f of faces){
     polyPath(f.pts);ctx.fillStyle=f.park?'#cfe6c2':'#f3f0e8';ctx.fill();
     if(f.owner>=0){ctx.globalAlpha=.34+f.flash*.45;ctx.fillStyle=COLORS[f.owner].c;ctx.fill();ctx.globalAlpha=1}
   }
-  // prévia do que será fechado
+  // preview of what will be closed
   for(const ag of agents){
     if(ag.flags.length>=3){
       const c=chainInfo(ag);ctx.globalAlpha=.16;ctx.fillStyle=ag.color;
@@ -520,11 +520,11 @@ function render(t){
       ctx.globalAlpha=1;
     }
   }
-  // ruas
+  // streets
   ctx.beginPath();for(const [a,b] of edges){ctx.moveTo(nodes[a].x,nodes[a].y);ctx.lineTo(nodes[b].x,nodes[b].y)}
   ctx.strokeStyle='#bfc4c9';ctx.lineWidth=13;ctx.stroke();
   ctx.strokeStyle='#fff';ctx.lineWidth=9;ctx.stroke();
-  // bordas de território
+  // territory borders
   const N=nodes.length;
   for(const [a,b] of edges){
     const f1=hf.get(a*N+b),f2=hf.get(b*N+a);
@@ -534,7 +534,7 @@ function render(t){
     if(o1>=0){ctx.setLineDash([]);ctx.strokeStyle=COLORS[o1].c;ctx.lineWidth=5;ctx.stroke()}
     if(o2>=0){ctx.setLineDash(o1>=0?[8,8]:[]);ctx.strokeStyle=COLORS[o2].c;ctx.lineWidth=5;ctx.stroke();ctx.setLineDash([])}
   }
-  // cercas em construção
+  // fences under construction
   for(const ag of agents){
     if(!ag.flags.length)continue;
     const c=chainInfo(ag);
@@ -544,24 +544,24 @@ function render(t){
     ctx.setLineDash([]);
   }
   for(const ag of agents)ag.flags.forEach((n,i)=>drawFlag(n,ag.color,i===0&&ag.flags.length>=3,t));
-  // balas
+  // bullets
   for(const b of bullets){
     ctx.beginPath();
     if(b.street){b.tr.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.lineTo(b.x,b.y)}
     else{ctx.moveTo(b.x-b.vx*.025,b.y-b.vy*.025);ctx.lineTo(b.x,b.y)}
     ctx.strokeStyle=b.owner.color;ctx.lineWidth=5;ctx.stroke();
   }
-  // partículas
+  // particles
   for(const p of parts){ctx.globalAlpha=Math.max(0,p.life);ctx.fillStyle=p.c;ctx.fillRect(p.x-2,p.y-2,4,4)}
   ctx.globalAlpha=1;
-  // prévia do caminho do tiro (pela rua)
+  // shot path preview (along the street)
   if(CFG.shotMode==='street'&&player.alive){
     const pts=traceShot(player);
     ctx.globalAlpha=player.cd>0?.18:.5;ctx.setLineDash([3,7]);ctx.strokeStyle=player.color;ctx.lineWidth=4;
     ctx.beginPath();pts.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
     ctx.setLineDash([]);ctx.globalAlpha=1;
   }
-  // triângulos
+  // triangles
   for(const ag of agents){
     if(!ag.alive)continue;
     if(ag.invT>0&&Math.floor(t*10)%2)continue;
@@ -584,26 +584,26 @@ function render(t){
   ctx.restore();
 }
 
-// ================= HUD / fim =================
+// ================= HUD / end =================
 function areas(){const a=COLORS.map(()=>0);for(const f of faces)if(f.owner>=0)a[f.owner]+=f.area;return a}
 function hud(){
   const ar=areas();
   const rows=agents.map(a=>({a,p:ar[a.id]/totalArea*100})).sort((x,y)=>y.p-x.p);
-  $('board').innerHTML='<h4>Território</h4>'+rows.map(r=>`<div class="row ${r.a.human?'me':''}"><svg width="14" height="14" viewBox="0 0 20 20"><path d="M18 10 3 18 3 2z" fill="${r.a.color}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="nm">${r.a.name}<span class="kd">${r.a.kills}☠ ${r.a.deaths}†</span></span><span class="pc">${r.p.toFixed(0)}%</span><div class="bar"><i style="width:${Math.min(100,r.p*2)}%;background:${r.a.color}"></i></div></div>`).join('');
+  $('board').innerHTML='<h4>Territory</h4>'+rows.map(r=>`<div class="row ${r.a.human?'me':''}"><svg width="14" height="14" viewBox="0 0 20 20"><path d="M18 10 3 18 3 2z" fill="${r.a.color}" stroke="#fff" stroke-width="1.5" stroke-linejoin="round"/></svg><span class="nm">${r.a.name}<span class="kd">${r.a.kills}☠ ${r.a.deaths}†</span></span><span class="pc">${r.p.toFixed(0)}%</span><div class="bar"><i style="width:${Math.min(100,r.p*2)}%;background:${r.a.color}"></i></div></div>`).join('');
   const m=Math.floor(timeLeft/60),s=Math.floor(timeLeft%60);
   $('timer').textContent=m+':'+String(s).padStart(2,'0');
   $('pips').style.setProperty('--c',player.color);
-  $('pips').innerHTML='<span style="margin-right:4px">Bandeiras</span>'+Array.from({length:CFG.maxFlags},(_,i)=>`<i class="${i<player.flags.length?'on':''}"></i>`).join('');
+  $('pips').innerHTML='<span style="margin-right:4px">Flags</span>'+Array.from({length:CFG.maxFlags},(_,i)=>`<i class="${i<player.flags.length?'on':''}"></i>`).join('');
   const d=$('dead');
-  if(!player.alive&&!over){d.style.display='block';d.textContent='Renasce em '+Math.ceil(player.respawnT)}else d.style.display='none';
+  if(!player.alive&&!over){d.style.display='block';d.textContent='Respawns in '+Math.ceil(player.respawnT)}else d.style.display='none';
   if(!over&&rows[0].p>=CFG.winPct)endGame();
 }
 function endGame(){
   if(over)return;over=true;
   const ar=areas();
   const rows=agents.map(a=>({a,p:ar[a.id]/totalArea*100})).sort((x,y)=>y.p-x.p);
-  $('endT').textContent=rows[0].a.human?'Você venceu! 🏆':'Vitória do '+rows[0].a.name;
-  $('endL').innerHTML=rows.map((r,i)=>`<div class="row ${r.a.human?'me':''}" style="grid-template-columns:20px 1fr 50px"><span>${i+1}º</span><span class="nm" style="color:${r.a.color}">${r.a.name}</span><span class="pc">${r.p.toFixed(1)}%</span></div>`).join('');
+  $('endT').textContent=rows[0].a.human?'You won! 🏆':'Victory of '+rows[0].a.name;
+  $('endL').innerHTML=rows.map((r,i)=>`<div class="row ${r.a.human?'me':''}" style="grid-template-columns:20px 1fr 50px"><span>${i+1}.</span><span class="nm" style="color:${r.a.color}">${r.a.name}</span><span class="pc">${r.p.toFixed(1)}%</span></div>`).join('');
   $('end').style.display='flex';
 }
 
@@ -618,8 +618,8 @@ function newGame(){
   $('end').style.display='none';
   const street=CFG.shotMode==='street';
   cv.style.cursor=street?'default':'crosshair';
-  $('hintShoot').innerHTML=street?'<b>espaço/clique esq.</b> atirar pra frente, pela rua (<b>S</b> inverte)':'<b>mouse</b> mirar · <b>clique/espaço</b> atirar';
-  say('Ande até um cruzamento, finque bandeiras (botão direito) e volte à 1ª pra cercar quarteirões',4200);
+  $('hintShoot').innerHTML=street?'<b>space/left click</b> shoot forward along the street (<b>S</b> reverses)':'<b>mouse</b> aim · <b>click/space</b> shoot';
+  say('Walk to an intersection, plant flags (right button) and return to the 1st to enclose blocks',4200);
 }
 
 let last=performance.now();
@@ -631,7 +631,7 @@ function frame(now){
 newGame();
 setInterval(hud,120);
 requestAnimationFrame(frame);
-// gancho p/ testes automáticos
+// hook for automated tests
 window.__game={get agents(){return agents},get faces(){return faces},get nodes(){return nodes},get adj(){return adj},CFG,plant,endGame,hud,shoot,place,traceShot,elen};
 })();
 </script>

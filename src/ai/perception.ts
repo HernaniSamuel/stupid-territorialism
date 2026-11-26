@@ -1,38 +1,38 @@
 /**
- * O que um bot "enxerga" sobre perigo: por onde um tiro poderia vir e quem está
- * ameaçando as suas bandeiras. Só leitura, nada aqui muda o estado do jogo.
+ * What a bot "sees" about danger: where a shot could come from and who
+ * is threatening its flags. Read-only: nothing here changes the game state.
  */
 import { CFG } from '../config';
 import { tracePath, traceShot } from '../entities/bullets';
 import { edgeLength } from '../map/graph';
 import type { Agent, GameState, Vec, World } from '../types';
 
-/** Uma linha de fogo: a sequência de pontos que um tiro percorreria. */
+/** A line of fire: the sequence of points a shot would travel. */
 export type FireLine = Vec[];
 
-/** Um inimigo com a recarga acabando é tratado como "prestes a atirar". */
+/** An enemy with its reload nearly done is treated as "about to shoot". */
 const READY_WINDOW = 0.45;
-/** Distância de uma linha de fogo a partir da qual um ponto é considerado atingível. */
+/** Distance from a line of fire within which a point is considered hittable. */
 const DANGER_RADIUS = CFG.hitR * 1.6;
 /**
- * Ao testar uma rua saindo de um nó, só olhamos de `EDGE_SKIP` a `EDGE_LOOKAHEAD` pixels adiante.
- * O começo é ignorado porque, parado num cruzamento em cima da linha de fogo, toda rua
- * parece perigosa nos primeiros pixels, inclusive a lateral que é a saída.
+ * When testing a street leaving a node, we only look from `EDGE_SKIP` to `EDGE_LOOKAHEAD` pixels ahead.
+ * The start is ignored because, standing at an intersection on top of the line of fire, every street
+ * looks dangerous in its first pixels, including the side exit.
  */
 const EDGE_SKIP = 30;
 const EDGE_LOOKAHEAD = 120;
 const EDGE_STEP = 12;
 /**
- * Quantas amostras do trecho precisam cair na linha de fogo pra rua contar como perigosa.
- * Atravessar a linha de lado toca 1 ou 2 amostras e dá tempo de sair antes do tiro chegar;
- * o perigo de verdade é andar ao longo dela.
+ * How many samples of the stretch must fall on the line of fire for the street to count as dangerous.
+ * Crossing the line sideways touches 1 or 2 samples and leaves time to get out before the shot arrives;
+ * the real danger is walking along it.
  */
 const EDGE_MIN_HITS = 4;
 
 /**
- * Linhas de fogo que poderiam atingir `bot` em breve: o tiro que cada inimigo pronto
- * soltaria agora e o trajeto restante dos tiros que já estão voando.
- * Só no modo 'street'; no 'free' os tiros são retos e não seguem as ruas, então devolve vazio.
+ * Lines of fire that could hit `bot` soon: the shot each ready enemy
+ * would fire now and the remaining path of the shots already in flight.
+ * Only in 'street' mode; in 'free' the shots are straight and don't follow the streets, so it returns empty.
  */
 export function incomingFire(state: GameState, bot: Agent): FireLine[] {
   if (CFG.shotMode !== 'street') return [];
@@ -47,7 +47,7 @@ export function incomingFire(state: GameState, bot: Agent): FireLine[] {
   return lines;
 }
 
-/** O ponto está perto o bastante de alguma linha de fogo pra ser acertado? */
+/** Is the point close enough to some line of fire to be hit? */
 export function inFire(p: Vec, lines: FireLine[]): boolean {
   for (const line of lines) {
     for (const q of line) if (Math.hypot(q.x - p.x, q.y - p.y) < DANGER_RADIUS) return true;
@@ -55,7 +55,7 @@ export function inFire(p: Vec, lines: FireLine[]): boolean {
   return false;
 }
 
-/** Andar de `from` até `to` seguiria por dentro de alguma linha de fogo (e não só a cruzaria)? */
+/** Would walking from `from` to `to` run inside some line of fire (and not just cross it)? */
 export function edgeExposed(world: World, from: number, to: number, lines: FireLine[]): boolean {
   const A = world.nodes[from];
   const B = world.nodes[to];
@@ -69,21 +69,21 @@ export function edgeExposed(world: World, from: number, to: number, lines: FireL
   return false;
 }
 
-/** Só vale defender uma cadeia com pelo menos isso de bandeiras fincadas (senão há pouco a perder). */
+/** It's only worth defending a chain with at least this many planted flags (otherwise there is little to lose). */
 const DEFEND_MIN_FLAGS = 2;
-/** Um inimigo parado a menos que isso (px) de uma bandeira já é ameaça, mesmo sem estar se aproximando. */
+/** An enemy standing still less than this (px) from a flag is already a threat, even without approaching. */
 const TOUCH_RANGE = 60;
-/** Cosseno mínimo entre a velocidade do inimigo e a direção da bandeira pra contar como "vindo pra cá". */
+/** Minimum cosine between the enemy's velocity and the direction of the flag to count as "coming this way". */
 const APPROACH_COS = 0.5;
-/** Abaixo disso (px/s) o inimigo é considerado parado. */
+/** Below this (px/s) the enemy is considered standing still. */
 const MOVING_SPEED = 20;
 
 /**
- * Um inimigo vivo que está realmente indo destruir uma bandeira do bot: a menos de
- * `CFG.botDefendRange` dela e **vindo na direção dela** (ou já colado). Quem só passa
- * por perto não conta, senão o bot largaria o plano a toda hora. Chegar a uma bandeira
- * destrói a cadeia inteira, então só se defende quando há cadeia suficiente pra perder.
- * @returns o inimigo mais próximo de uma bandeira entre os que ameaçam, ou `null`.
+ * A living enemy that is actually about to destroy one of the bot's flags: within
+ * `CFG.botDefendRange` of it and **coming toward it** (or already stuck to it). Someone who merely
+ * passes nearby doesn't count, otherwise the bot would drop its plan all the time. Reaching a flag
+ * destroys the entire chain, so it only defends when there is enough chain to lose.
+ * @returns the enemy closest to a flag among those that threaten, or `null`.
  */
 export function chainThreat(state: GameState, bot: Agent): Agent | null {
   if (bot.flags.length < DEFEND_MIN_FLAGS) return null;

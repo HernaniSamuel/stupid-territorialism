@@ -4,12 +4,12 @@ import { clampToRadius, STICK_DEADZONE, stickDirection } from '../src/input/stic
 const R = 56;
 
 describe('stickDirection', () => {
-  it('dentro da zona morta não há direção', () => {
+  it('inside the dead zone there is no direction', () => {
     expect(stickDirection(0, 0, R)).toEqual({ x: 0, y: 0 });
     expect(stickDirection(R * STICK_DEADZONE * 0.9, 0, R)).toEqual({ x: 0, y: 0 });
   });
 
-  it('fora da zona morta devolve a direção unitária, como o WASD', () => {
+  it('outside the dead zone it returns the unit direction, like WASD', () => {
     expect(stickDirection(30, 0, R)).toEqual({ x: 1, y: 0 });
     expect(stickDirection(0, -40, R)).toEqual({ x: 0, y: -1 });
     const d = stickDirection(30, 30, R);
@@ -17,16 +17,16 @@ describe('stickDirection', () => {
     expect(d.x).toBeCloseTo(d.y);
   });
 
-  it('não importa o quanto passou do raio: a direção é a mesma', () => {
+  it('it does not matter how far past the radius it goes: the direction is the same', () => {
     expect(stickDirection(500, 0, R)).toEqual({ x: 1, y: 0 });
   });
 });
 
 describe('clampToRadius', () => {
-  it('mantém o que está dentro e limita o que passa', () => {
+  it('keeps what is inside and clamps what goes past', () => {
     expect(clampToRadius(10, 20, R)).toEqual({ x: 10, y: 20 });
     const c = clampToRadius(300, 400, R);
     expect(Math.hypot(c.x, c.y)).toBeCloseTo(R);
-    expect(c.y / c.x).toBeCloseTo(4 / 3); // mesma direção
+    expect(c.y / c.x).toBeCloseTo(4 / 3); // same direction
   });
 });

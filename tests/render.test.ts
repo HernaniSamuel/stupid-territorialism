@@ -7,7 +7,7 @@ import { createRenderer } from '../src/render/renderer';
 import { plant } from '../src/rules/territory';
 import type { PlayerCommand } from '../src/types';
 
-/** Contexto 2D falso: aceita qualquer chamada/atribuição e só registra os nomes dos métodos. */
+/** Fake 2D context: accepts any call/assignment and only records the method names. */
 function fakeCanvas() {
   const calls: string[] = [];
   const ctx = new Proxy(
@@ -35,11 +35,11 @@ afterEach(() => {
 });
 
 describe('renderer', () => {
-  it.each(['street', 'free'] as const)('desenha todas as camadas sem erro (modo %s)', (mode) => {
+  it.each(['street', 'free'] as const)('draws all layers without error (mode %s)', (mode) => {
     CFG.shotMode = mode;
     const state = createGame(9);
     for (let t = 0; t < 40; t += 1 / 30) update(state, 1 / 30, IDLE);
-    // Coloca o que o desenho precisa mostrar: cerca em construção, bandeiras, tiro, partículas.
+    // Put what the drawing needs to show: fence under construction, flags, shot, particles.
     for (const n of [0, 1, 14]) plant(state, state.player, n);
     state.player.cd = 0;
     shoot(state, state.player, 100, 100);
@@ -60,7 +60,7 @@ describe('renderer', () => {
     expect(calls).toContain('setLineDash');
   });
 
-  it('também desenha na visão geral e depois do fim da partida', () => {
+  it('also draws in the overview and after the match ends', () => {
     const state = createGame(4);
     state.over = true;
     const { canvas } = fakeCanvas();
@@ -73,8 +73,8 @@ describe('renderer', () => {
   });
 });
 
-describe('câmera', () => {
-  it('zoom respeita os limites e sai da visão geral', () => {
+describe('camera', () => {
+  it('zoom respects the limits and leaves the overview', () => {
     const cam = createCamera();
     cam.overview = true;
     for (let i = 0; i < 100; i++) zoomBy(cam, -1);
@@ -84,28 +84,28 @@ describe('câmera', () => {
     expect(cam.zoomTarget).toBe(0.6);
   });
 
-  it('o zoom padrão acompanha a altura da tela: telefone deitado afasta, monitor mantém', () => {
+  it('the default zoom follows the screen height: phone in landscape zooms out, monitor keeps it', () => {
     expect(autoZoom(1080)).toBe(1.35);
     expect(autoZoom(720)).toBe(1.35);
     expect(autoZoom(390)).toBeCloseTo(0.75);
-    expect(autoZoom(200)).toBe(0.75); // nunca menos que o mínimo
+    expect(autoZoom(200)).toBe(0.75); // never less than the minimum
     expect(autoZoom(450)).toBeGreaterThan(autoZoom(390));
   });
 
-  it('a câmera segue o zoom automático até a pessoa mexer no zoom', () => {
+  it('the camera follows the automatic zoom until the person changes the zoom', () => {
     const state = createGame(2);
     const cam = createCamera();
     updateCamera(cam, state, 1 / 30, 844, 390);
     expect(cam.zoomTarget).toBeCloseTo(0.75);
     updateCamera(cam, state, 1 / 30, 1920, 1080);
-    expect(cam.zoomTarget).toBe(1.35); // a janela cresceu: acompanha
-    zoomBy(cam, -1); // a pessoa mexeu: a partir daqui o zoom é dela
+    expect(cam.zoomTarget).toBe(1.35); // the window grew: follows
+    zoomBy(cam, -1); // the person changed it: from here on the zoom is theirs
     const chosen = cam.zoomTarget;
     updateCamera(cam, state, 1 / 30, 844, 390);
     expect(cam.zoomTarget).toBe(chosen);
   });
 
-  it('screenToWorld: o centro da tela é o ponto da câmera', () => {
+  it('screenToWorld: the center of the screen is the camera point', () => {
     const cam = createCamera();
     cam.x = 300;
     cam.y = 200;

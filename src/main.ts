@@ -1,6 +1,6 @@
 /**
- * Ponto de entrada: liga a simulação (game.ts) à tela, ao teclado/mouse e ao som,
- * e roda o laço principal. Toda a lógica de jogo fica nos outros módulos.
+ * Entry point: connects the simulation (game.ts) to the screen, keyboard/mouse and sound,
+ * and runs the main loop. All game logic lives in the other modules.
  */
 import { CFG } from './config';
 import { randomSeed } from './core/rng';
@@ -22,7 +22,7 @@ const hud = createHud();
 const sfx = createSfx();
 const camera = createCamera();
 
-/** `?seed=123` na URL reproduz exatamente o mesmo mapa. */
+/** `?seed=123` in the URL reproduces exactly the same map. */
 function seedFromUrl(): number | null {
   const raw = new URLSearchParams(location.search).get('seed');
   const n = raw === null ? NaN : Number(raw);
@@ -39,24 +39,24 @@ function startGame(seed: number): void {
   canvas.style.cursor = CFG.shotMode === 'street' ? 'default' : 'crosshair';
   hud.say(
     touch.active
-      ? 'Ande com o joystick, toque na bandeira 🚩 nos cruzamentos e volte à 1ª pra cercar quarteirões'
-      : 'Ande até um cruzamento, finque bandeiras (botão direito) e volte à 1ª pra cercar quarteirões',
+      ? 'Walk with the joystick, tap the flag 🚩 at intersections and return to the 1st to enclose blocks'
+      : 'Walk to an intersection, plant flags (right button) and return to the 1st to enclose blocks',
     4200,
   );
-  console.info(`Mapa gerado com seed ${seed} (use ?seed=${seed} na URL pra repetir)`);
+  console.info(`Map generated with seed ${seed} (use ?seed=${seed} in the URL to repeat it)`);
 }
 
-/** Ações que teclado, mouse e toque disparam do mesmo jeito. */
+/** Actions that keyboard, mouse and touch trigger in the same way. */
 const actions = {
   onRestart: () => startGame(randomSeed()),
   onToggleOverview: () => {
     camera.overview = !camera.overview;
   },
-  onToggleMute: () => hud.say(sfx.toggleMute() ? 'Som desligado' : 'Som ligado', 900),
+  onToggleMute: () => hud.say(sfx.toggleMute() ? 'Sound off' : 'Sound on', 900),
   onPlant: () => {
     if (state.over || !state.player.alive) return;
     const node = nodeNear(state.world, state.player, CFG.plantReach);
-    if (node < 0) hud.say('Pare num cruzamento pra fincar a bandeira');
+    if (node < 0) hud.say('Stop at an intersection to plant the flag');
     else plant(state, state.player, node);
   },
 };
@@ -65,11 +65,11 @@ const input = createInput(canvas, { ...actions, onZoom: (deltaY) => zoomBy(camer
 const touch = createTouchControls(actions);
 document.getElementById('again')?.addEventListener('click', actions.onRestart);
 
-// Navegadores de celular só liberam o som depois de um gesto da pessoa, e num toque o gesto que conta é soltar
-// o dedo (pointerup), não pousar. Por isso tentamos a cada gesto; `unlock` é barato quando já está liberado.
+// Mobile browsers only unlock sound after a user gesture, and on a tap the gesture that counts is lifting
+// the finger (pointerup), not touching down. So we try on every gesture; `unlock` is cheap once it's already unlocked.
 for (const type of ['pointerup', 'keydown'] as const) addEventListener(type, () => sfx.unlock());
 
-/** Telefone em pé: o jogo pausa até a pessoa girar o aparelho (o aviso é desenhado pelo CSS). */
+/** Phone upright: the game pauses until the person rotates the device (the notice is drawn by CSS). */
 const portrait = matchMedia('(orientation: portrait)');
 
 let last = performance.now();
@@ -79,7 +79,7 @@ function frame(now: number): void {
 
   const aim = screenToWorld(camera, input.mouse.x, input.mouse.y, renderer.width, renderer.height);
   if (!(touch.active && portrait.matches)) {
-    // O joystick, se estiver em uso, tem prioridade sobre o teclado.
+    // The joystick, if in use, takes priority over the keyboard.
     const stick = touch.dir();
     const dir = stick.x || stick.y ? stick : input.dir();
     update(state, dt, { dir, fire: input.firing() || touch.firing(), aim });
@@ -95,7 +95,7 @@ startGame(seedFromUrl() ?? randomSeed());
 setInterval(() => hud.update(state), 120);
 requestAnimationFrame(frame);
 
-// Gancho de depuração no console (só em desenvolvimento): __game.state, __game.CFG
+// Debug hook in the console (development only): __game.state, __game.CFG
 if (import.meta.env.DEV) {
   Object.defineProperty(window, '__game', {
     value: {

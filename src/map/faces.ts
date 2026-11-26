@@ -1,27 +1,27 @@
 /**
- * Descobre os quarteirões (faces) de um grafo planar.
+ * Finds the city blocks (faces) of a planar graph.
  *
- * Técnica: percorrer meias-arestas. Cada rua vira duas meias-arestas (a→b e b→a).
- * Partindo de uma, em cada nó viramos pra rua imediatamente anterior (em ângulo)
- * à de onde viemos; isso contorna a mesma face até voltar ao começo. A face com
- * área assinada mais negativa é a de fora do mapa e é descartada.
+ * Technique: walking half-edges. Each street becomes two half-edges (a→b and b→a).
+ * Starting from one, at each node we turn to the street immediately before (by angle)
+ * the one we came from; this goes around the same face until we return to the start. The face with the most
+ * negative signed area is the outside of the map and is discarded.
  */
 import type { Face, GNode, Neighbor } from '../types';
 
 interface RawFace {
   loop: number[];
   halfEdges: [number, number][];
-  /** Área assinada (shoelace). Negativa para a face externa. */
+  /** Signed area (shoelace). Negative for the outer face. */
   area: number;
 }
 
 export interface FacesResult {
   faces: Face[];
-  /** Meia-aresta (chave `a*N+b`) → índice em `faces`. */
+  /** Half-edge (key `a*N+b`) → index in `faces`. */
   halfEdgeFace: Map<number, number>;
 }
 
-/** @param minArea quarteirões com área menor que isso são descartados. */
+/** @param minArea city blocks with an area smaller than this are discarded. */
 export function buildFaces(nodes: GNode[], adj: Neighbor[][], minArea: number): FacesResult {
   const N = nodes.length;
   const visited = new Set<number>();
@@ -65,7 +65,7 @@ export function buildFaces(nodes: GNode[], adj: Neighbor[][], minArea: number): 
   const halfEdgeFace = new Map<number, number>();
   raw.forEach((f, i) => {
     if (i === outer || f.area < minArea) return;
-    // Ponto de teste: logo "pra dentro" a partir do meio da maior aresta da face.
+    // Test point: just "inside" from the midpoint of the longest edge of the face.
     let best: [number, number] = f.halfEdges[0];
     let bestLen = 0;
     for (const [a, b] of f.halfEdges) {

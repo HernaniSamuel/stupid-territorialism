@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
 
-// Gera um único .html (JS e CSS embutidos) em dist-single/, pra mandar pra alguém.
+// Generates a single .html (JS and CSS inlined) in dist-single/, to send to someone.
 export default defineConfig({
   plugins: [viteSingleFile()],
   build: { outDir: 'dist-single' },

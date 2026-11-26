@@ -1,4 +1,4 @@
-/** Desenho do que se move ou é colocado sobre o mapa: cercas, bandeiras, tiros, agentes. */
+/** Drawing of what moves or is placed over the map: fences, flags, shots, agents. */
 import { CFG } from '../config';
 import { traceShot } from '../entities/bullets';
 import type { GameState, Vec } from '../types';
@@ -11,7 +11,7 @@ function strokeNodes(ctx: CanvasRenderingContext2D, state: GameState, list: numb
   ctx.stroke();
 }
 
-/** Cercas tracejadas das cadeias em construção (o trecho de fechamento fica mais fraco). */
+/** Dashed fences of the chains under construction (the closing stretch is fainter). */
 export function drawFences(ctx: CanvasRenderingContext2D, state: GameState, t: number): void {
   for (const ag of state.agents) {
     if (!ag.flags.length) continue;
@@ -58,7 +58,7 @@ function drawFlag(ctx: CanvasRenderingContext2D, p: Vec, color: string, pulsing:
   ctx.fill();
 }
 
-/** A primeira bandeira pulsa quando já dá pra fechar o laço (3 ou mais). */
+/** The first flag pulses when the loop can already be closed (3 or more). */
 export function drawFlags(ctx: CanvasRenderingContext2D, state: GameState, t: number): void {
   for (const ag of state.agents) {
     ag.flags.forEach((n, i) => drawFlag(ctx, state.world.nodes[n], ag.color, i === 0 && ag.flags.length >= 3, t));
@@ -90,7 +90,7 @@ export function drawParticles(ctx: CanvasRenderingContext2D, state: GameState): 
   ctx.globalAlpha = 1;
 }
 
-/** Pontilhado mostrando por onde o tiro do jogador sairia (modo 'street'). */
+/** Dotted line showing where the player's shot would go (in 'street' mode). */
 export function drawShotPreview(ctx: CanvasRenderingContext2D, state: GameState): void {
   const { player } = state;
   if (CFG.shotMode !== 'street' || !player.alive) return;
@@ -106,11 +106,11 @@ export function drawShotPreview(ctx: CanvasRenderingContext2D, state: GameState)
   ctx.globalAlpha = 1;
 }
 
-/** Os triângulos. `aim` (ponto do mundo) só é usado pela mirinha do jogador no modo 'free'. */
+/** The triangles. `aim` (world point) is only used by the player's crosshair in 'free' mode. */
 export function drawAgents(ctx: CanvasRenderingContext2D, state: GameState, t: number, aim: Vec): void {
   for (const ag of state.agents) {
     if (!ag.alive) continue;
-    if (ag.invT > 0 && Math.floor(t * 10) % 2) continue; // pisca enquanto invulnerável
+    if (ag.invT > 0 && Math.floor(t * 10) % 2) continue; // blink while invulnerable
     ctx.save();
     ctx.translate(ag.x, ag.y);
     if (ag.human) {

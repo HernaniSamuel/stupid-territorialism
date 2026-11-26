@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Jogo de cercar quarteirões com bandeiras, num mapa de ruas.",
+  "description": "A game about enclosing city blocks with flags on a street map.",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

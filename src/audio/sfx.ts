@@ -1,15 +1,15 @@
-/** Efeitos sonoros sintetizados com WebAudio (sem arquivos de áudio). */
+/** Sound effects synthesized with WebAudio (no audio files). */
 
 export type SfxKind = 'shot' | 'plant' | 'claim' | 'kill' | 'break';
 
 export interface Sfx {
   /**
-   * Libera o áudio. Navegadores de celular só deixam tocar depois de um toque da pessoa,
-   * então isto é chamado no primeiro gesto (toque ou tecla).
+   * Unlocks the audio. Phone browsers only allow playback after a touch from the person,
+   * so this is called on the first gesture (touch or key).
    */
   unlock(): void;
   play(kind: SfxKind): void;
-  /** Liga/desliga o som. Devolve `true` se ficou mudo. */
+  /** Turns sound on/off. Returns `true` if it is now muted. */
   toggleMute(): boolean;
 }
 
@@ -34,7 +34,7 @@ export function createSfx(): Sfx {
       osc.start(t);
       osc.stop(t + dur);
     } catch {
-      // Sem áudio disponível (ou bloqueado pelo navegador): o jogo segue em silêncio.
+      // No audio available (or blocked by the browser): the game carries on in silence.
     }
   }
 
@@ -44,7 +44,7 @@ export function createSfx(): Sfx {
         ac = ac ?? new AudioContext();
         if (ac.state === 'suspended') void ac.resume();
       } catch {
-        // Sem áudio disponível: o jogo segue em silêncio.
+        // No audio available: the game carries on in silence.
       }
     },
     play(kind) {

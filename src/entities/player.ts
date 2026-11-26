@@ -1,10 +1,10 @@
-/** Como as teclas do jogador viram movimento pelo grafo. */
+/** How the player's keys turn into movement along the graph. */
 import type { Agent, Vec, World } from '../types';
 import { nodeAt } from './agent';
 
 /**
- * No meio de uma rua, define o sentido (ida ou volta) conforme a direção pedida;
- * sem direção, para. Nos cruzamentos quem decide é `pickPlayerEdge`.
+ * In the middle of a street, sets the direction (forward or back) according to the requested direction;
+ * with no direction, stops. At intersections, `pickPlayerEdge` decides.
  */
 export function steerPlayer(world: World, ag: Agent, dir: Vec): void {
   if (!dir.x && !dir.y) {
@@ -19,7 +19,7 @@ export function steerPlayer(world: World, ag: Agent, dir: Vec): void {
   if (Math.abs(dot) > 0.35) ag.mv = dot > 0 ? 1 : -1;
 }
 
-/** Num cruzamento, escolhe a rua mais alinhada com a direção pedida (ou -1 se nenhuma serve). */
+/** At an intersection, picks the street best aligned with the requested direction (or -1 if none fits). */
 export function pickPlayerEdge(world: World, node: number, dir: Vec): number {
   if (!dir.x && !dir.y) return -1;
   let best = -1;

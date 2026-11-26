@@ -1,22 +1,22 @@
-/** HUD em HTML: placar, relógio, bandeiras, avisos e tela de fim. Os ids vêm do index.html. */
+/** HTML HUD: scoreboard, clock, flags, messages and end screen. The ids come from index.html. */
 import { CFG, type ShotMode } from '../config';
 import { standings } from '../rules/match';
 import type { GameState } from '../types';
 
 export interface Hud {
-  /** Mostra uma mensagem curta no topo, por `ms` milissegundos. */
+  /** Shows a short message at the top, for `ms` milliseconds. */
   say(msg: string, ms?: number): void;
-  /** Redesenha placar, relógio, bandeiras e o aviso de "renasce em". */
+  /** Redraws the scoreboard, clock, flags and the "respawns in" notice. */
   update(state: GameState): void;
   showEnd(state: GameState): void;
   hideEnd(): void;
-  /** Ajusta a dica de controle de tiro conforme o modo. */
+  /** Adjusts the shooting control hint according to the mode. */
   setShotHint(mode: ShotMode): void;
 }
 
 function el(id: string): HTMLElement {
   const e = document.getElementById(id);
-  if (!e) throw new Error(`Elemento #${id} não encontrado no HTML`);
+  if (!e) throw new Error(`Element #${id} not found in the HTML`);
   return e;
 }
 
@@ -42,9 +42,9 @@ export function createHud(): Hud {
 
     update(state) {
       const rows = standings(state);
-      // Nomes e cores vêm de constantes do código, nunca do usuário: innerHTML é seguro aqui.
+      // Names and colors come from code constants, never from the user: innerHTML is safe here.
       board.innerHTML =
-        '<h4>Território</h4>' +
+        '<h4>Territory</h4>' +
         rows
           .map(
             (r) =>
@@ -59,22 +59,22 @@ export function createHud(): Hud {
       const { player } = state;
       pips.style.setProperty('--c', player.color);
       pips.innerHTML =
-        '<span style="margin-right:4px">Bandeiras</span>' +
+        '<span style="margin-right:4px">Flags</span>' +
         Array.from({ length: CFG.maxFlags }, (_, i) => `<i class="${i < player.flags.length ? 'on' : ''}"></i>`).join('');
 
       if (!player.alive && !state.over) {
         dead.style.display = 'block';
-        dead.textContent = 'Renasce em ' + Math.ceil(player.respawnT);
+        dead.textContent = 'Respawns in ' + Math.ceil(player.respawnT);
       } else dead.style.display = 'none';
     },
 
     showEnd(state) {
       const rows = standings(state);
-      endTitle.textContent = rows[0].agent.human ? 'Você venceu! 🏆' : 'Vitória do ' + rows[0].agent.name;
+      endTitle.textContent = rows[0].agent.human ? 'You won! 🏆' : 'Victory of ' + rows[0].agent.name;
       endList.innerHTML = rows
         .map(
           (r, i) =>
-            `<div class="row ${r.agent.human ? 'me' : ''}" style="grid-template-columns:20px 1fr 50px"><span>${i + 1}º</span><span class="nm" style="color:${r.agent.color}">${r.agent.name}</span><span class="pc">${r.pct.toFixed(1)}%</span></div>`,
+            `<div class="row ${r.agent.human ? 'me' : ''}" style="grid-template-columns:20px 1fr 50px"><span>${i + 1}.</span><span class="nm" style="color:${r.agent.color}">${r.agent.name}</span><span class="pc">${r.pct.toFixed(1)}%</span></div>`,
         )
         .join('');
       endBox.style.display = 'flex';
@@ -87,8 +87,8 @@ export function createHud(): Hud {
     setShotHint(mode) {
       shotHint.innerHTML =
         mode === 'street'
-          ? '<b>espaço/clique esq.</b> atirar pra frente, pela rua (<b>S</b> inverte)'
-          : '<b>mouse</b> mirar · <b>clique/espaço</b> atirar';
+          ? '<b>space/left click</b> shoot forward along the street (<b>S</b> reverses)'
+          : '<b>mouse</b> aim · <b>click/space</b> shoot';
     },
   };
 }

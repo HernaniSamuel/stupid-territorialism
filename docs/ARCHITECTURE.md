@@ -1,19 +1,19 @@
-# Arquitetura
+# Architecture
 
-## A ideia central
+## The core idea
 
-O jogo é dividido em duas metades que quase não se conhecem:
+The game is split into two halves that barely know about each other:
 
-- **Simulação** (`map/`, `entities/`, `rules/`, `ai/`, `game.ts`): decide *o que acontece*. Não usa `document`, `canvas`
-  nem áudio, então roda igual no navegador e nos testes (em Node puro).
-- **Apresentação** (`render/`, `ui/`, `audio/`, `input/`, `main.ts`): mostra o estado e traduz teclas em comandos.
+- **Simulation** (`map/`, `entities/`, `rules/`, `ai/`, `game.ts`): decides *what happens*. It does not use `document`, `canvas`
+  or audio, so it runs the same way in the browser and in the tests (in plain Node).
+- **Presentation** (`render/`, `ui/`, `audio/`, `input/`, `main.ts`): shows the state and translates keys into commands.
 
-A única ponte da simulação pra apresentação é a fila `state.events`. A única ponte contrária é o `PlayerCommand`
-(direção, atirar, mira) que o `main.ts` monta a cada frame.
+The only bridge from the simulation to the presentation is the `state.events` queue. The only bridge in the other direction is the `PlayerCommand`
+(direction, shoot, aim) that `main.ts` builds every frame.
 
-## Direção das dependências
+## Direction of dependencies
 
-Um módulo só importa dos que estão **acima** dele. Nada importa de `main.ts`.
+A module only imports from modules **above** it. Nothing imports from `main.ts`.
 
 ```mermaid
 flowchart TD
@@ -32,138 +32,135 @@ flowchart TD
   render --> entities
 ```
 
-| Pasta        | Responsabilidade                                                                                          |
+| Folder       | Responsibility                                                                                            |
 | ------------ | --------------------------------------------------------------------------------------------------------- |
-| `core/`      | `rng.ts`: gerador com semente (`createRng`), `shuffle`. Único lugar que usa `Math.random` é `randomSeed`. |
-| `map/`       | Grafo de ruas, caminho mínimo, descoberta de quarteirões, mapa procedural. Não conhece agentes.           |
-| `entities/`  | Agente, como ele anda pelas ruas, como o jogador é controlado, criação e trajetória dos tiros.            |
-| `rules/`     | Regras: `territory` (bandeiras, laços, morte, renascimento), `combat` (projéteis e acertos), `match` (placar e fim). |
-| `ai/`        | Bots: `bot` (decisões em 3 camadas), `perception` (perigo), `planner` (escolha de laços), `combat` (quando atirar). Ver [BOTS.md](BOTS.md). |
-| `game.ts`    | `createGame(seed)` e `update(state, dt, cmd)`: a ordem das etapas de um frame.                            |
-| `render/`    | Câmera e desenho no canvas, em camadas.                                                                   |
-| `input/`     | Teclado e mouse (`input.ts`) e controles de toque (`touch.ts`: joystick flutuante e botões; `stick.ts`: a matemática, pura). Os dois geram a mesma coisa: direção, "atirando" e as ações. |
-| `ui/`        | HUD em HTML (`hud`) e a tradução evento → som/mensagem (`feedback`).                                      |
+| `core/`      | `rng.ts`: seeded generator (`createRng`), `shuffle`. The only place that uses `Math.random` is `randomSeed`. |
+| `map/`       | Street graph, shortest path, city block discovery, procedural map. Knows nothing about agents.            |
+| `entities/`  | Agent, how it moves along the streets, how the player is controlled, creation and trajectory of shots.    |
+| `rules/`     | Rules: `territory` (flags, loops, death, respawn), `combat` (projectiles and hits), `match` (scoreboard and end). |
+| `ai/`        | Bots: `bot` (3-layer decisions), `perception` (danger), `planner` (loop choice), `combat` (when to shoot). See [BOTS.md](BOTS.md). |
+| `game.ts`    | `createGame(seed)` and `update(state, dt, cmd)`: the order of the steps in a frame.                       |
+| `render/`    | Camera and drawing on the canvas, in layers.                                                              |
+| `input/`     | Keyboard and mouse (`input.ts`) and touch controls (`touch.ts`: floating joystick and buttons; `stick.ts`: the math, pure). Both produce the same thing: direction, "shooting" and the actions. |
+| `ui/`        | HTML HUD (`hud`) and the translation event → sound/message (`feedback`).                                  |
 
-## Modelo de dados
+## Data model
 
-Está todo em [`src/types.ts`](../src/types.ts).
+It's all in [`src/types.ts`](../src/types.ts).
 
-- **`World`**: o mapa pronto. `nodes` (cruzamentos), `edges` (ruas), `adj` (vizinhos de cada nó, ordenados por ângulo),
-  `faces` (quarteirões), `halfEdgeFace` (qual quarteirão fica de cada lado de uma rua) e `paths` (cache de Dijkstra).
-- **`GameState`**: uma partida. `world`, `agents`, `bullets`, `particles`, `timeLeft`, `over`, `events`, a semente e o `rng`.
-- **`Agent`**: está sempre *numa rua*, de `a` até `b`, a `d` pixels de `a`. Só pode trocar de rua nos cruzamentos.
+- **`World`**: the finished map. `nodes` (intersections), `edges` (streets), `adj` (neighbors of each node, sorted by angle),
+  `faces` (city blocks), `halfEdgeFace` (which block lies on each side of a street) and `paths` (Dijkstra cache).
+- **`GameState`**: one match. `world`, `agents`, `bullets`, `particles`, `timeLeft`, `over`, `events`, the seed and the `rng`.
+- **`Agent`**: is always *on a street*, from `a` to `b`, `d` pixels from `a`. It can only switch streets at intersections.
 
-> Nós e faces são sempre referidos por **índice** (`number`). Cuidado pra não trocar um pelo outro.
+> Nodes and faces are always referred to by **index** (`number`). Be careful not to mix them up.
 
-### Como os quarteirões aparecem
+### How city blocks appear
 
-[`map/faces.ts`](../src/map/faces.ts) percorre meias-arestas: cada rua vira duas (a→b e b→a); em cada nó viramos pra rua
-imediatamente anterior em ângulo, o que contorna uma face até voltar ao início. A face de maior área negativa é a de fora
-do mapa e é descartada. Qualquer grafo planar conexo funciona.
+[`map/faces.ts`](../src/map/faces.ts) walks half-edges: each street becomes two (a→b and b→a); at each node we turn to the
+street immediately before it in angle, which goes around a face until we return to the start. The face with the largest negative area is the outside of the map and is discarded. Any connected planar graph works.
 
-### Como um laço de bandeiras captura quarteirões
+### How a flag loop captures city blocks
 
-`enclosedFaces` liga as bandeiras por caminhos mínimos (formando um polígono de ruas) e captura os quarteirões cujo
-`probe` (um ponto logo dentro deles) cai dentro do polígono.
+`enclosedFaces` connects the flags by shortest paths (forming a polygon of streets) and captures the blocks whose
+`probe` (a point just inside them) falls inside the polygon.
 
-## Um frame
+## One frame
 
-`main.ts` chama, nesta ordem:
+`main.ts` calls, in this order:
 
-1. monta o `PlayerCommand` (teclas + mouse convertido pro mundo);
-2. `update(state, dt, cmd)`: efeitos visuais → relógio → cada agente (renascer, andar, atirar) → bandeiras tocadas →
-   projéteis → vitória por porcentagem;
-3. `handleEvents`: esvazia `state.events` e toca sons / mostra mensagens;
-4. `updateCamera` e `renderer.render`.
+1. builds the `PlayerCommand` (keys + mouse converted to world coordinates);
+2. `update(state, dt, cmd)`: visual effects → clock → each agent (respawn, move, shoot) → flags touched →
+   projectiles → victory by percentage;
+3. `handleEvents`: empties `state.events` and plays sounds / shows messages;
+4. `updateCamera` and `renderer.render`.
 
-O HUD em HTML atualiza num `setInterval` de 120 ms, à parte.
+The HTML HUD updates in a separate `setInterval` every 120 ms.
 
-## Eventos
+## Events
 
-A simulação nunca diz "toque este som" ou "escreva esta mensagem", só "isso aconteceu":
+The simulation never says "play this sound" or "write this message", only "this happened":
 `shot`, `plant`, `plantRejected`, `loopReady`, `claim`, `claimEmpty`, `chainDestroyed`, `kill`, `matchEnd`.
-Quem decide como reagir é [`ui/feedback.ts`](../src/ui/feedback.ts). Mudar um texto ou som não toca nas regras, e os
-testes conferem as regras olhando os eventos.
+[`ui/feedback.ts`](../src/ui/feedback.ts) decides how to react. Changing a text or sound doesn't touch the rules, and the tests check the rules by looking at the events.
 
-## Determinismo
+## Determinism
 
-Mapa, parques, decisões dos bots, partículas: tudo vem de `state.rng`, criado a partir de `state.seed`. Com a mesma
-semente e o mesmo `dt`, a partida é idêntica (há um teste pra isso). `?seed=N` na URL aproveita isso.
+Map, parks, bot decisions, particles: everything comes from `state.rng`, created from `state.seed`. With the same
+seed and the same `dt`, the match is identical (there is a test for this). `?seed=N` in the URL takes advantage of this.
 
-## Geradores de mapa
+## Map generators
 
-Hoje só existe o procedural ([`map/procedural.ts`](../src/map/procedural.ts)), mas o resto do jogo só enxerga um `Graph`
-(cruzamentos e ruas) vindo de um `MapSource` ([`map/source.ts`](../src/map/source.ts)). Pra criar outro estilo de mapa,
-implemente `build(rng): Graph` e chame `createGame(seed, minhaFonte)`. Use o `rng` recebido, nunca `Math.random`, pra
-manter as sementes funcionando.
+Today there is only the procedural one ([`map/procedural.ts`](../src/map/procedural.ts)), but the rest of the game only sees a `Graph`
+(intersections and streets) coming from a `MapSource` ([`map/source.ts`](../src/map/source.ts)). To create another style of map,
+implement `build(rng): Graph` and call `createGame(seed, mySource)`. Use the `rng` you receive, never `Math.random`, so that
+seeds keep working.
 
-O grafo precisa ser **planar** (ruas só se cruzam em nós), **conexo** e sem nós soltos. Se a escala mudar muito, ajuste
+The graph must be **planar** (streets only cross at nodes), **connected** and free of loose nodes. If the scale changes a lot, adjust
 `CFG.minFaceArea`.
 
-Limites de desempenho: o Dijkstra (`shortestPaths`) é O(N²) por origem e `nearestNode` é O(N). Bom até algumas centenas
-de nós; pra mais que isso, troque por um heap.
+Performance limits: Dijkstra (`shortestPaths`) is O(N²) per source and `nearestNode` is O(N). Fine up to a few hundred nodes; beyond that, switch to a heap.
 
-## Torneio de bots (`npm run sim`)
+## Bot tournament (`npm run sim`)
 
-Como a simulação roda sem tela e com semente, dá pra medir os bots em vez de julgar no olho:
-[`sim/tournament.sim.ts`](../sim/tournament.sim.ts) joga centenas de partidas só de bots (o agente 0 vira bot com
-`createGame(seed, { human: false })`) e compara personalidades, com os cantos alternados pra um spawn bom não favorecer ninguém.
-
-```bash
-npm run sim                          # tudo, 60 sementes (~5 min)
-SEEDS=200 npm run sim                # mais partidas, menos ruído
-SEED0=5000 npm run sim               # partidas diferentes, pra confirmar sem repetir a amostra
-ONLY="ablação" npm run sim           # só os confrontos cujo nome contém o texto
-```
-
-No PowerShell: `$env:SEEDS=200; npm run sim`. A saída mostra, por personalidade, vitórias (com a "base" esperada se todos
-fossem iguais), território médio e mortes. Há confrontos de cada personalidade contra o clássico, todos contra todos e
-uma **ablação** (um comportamento novo por vez ligado no clássico). Com 200 partidas o erro é de uns ±3 pontos:
-só confie em diferenças maiores, ou confirme com outro `SEED0`.
-
-O preset `CLASSIC` reproduz o comportamento original dos bots bit a bit, então serve de adversário de referência: uma
-mudança nos bots só é melhoria se vencer o clássico em partidas que você não usou pra ajustá-la.
-
-## Evolução de personalidades (`npm run evolve`)
-
-[`sim/evolve.sim.ts`](../sim/evolve.sim.ts) procura automaticamente bons parâmetros de personalidade (uma Estratégia
-Evolutiva simples; o algoritmo está explicado no topo do arquivo e os resultados em [BOTS.md](BOTS.md)). Leva ~15 a 20
-minutos. Os candidatos que valem a pena guardar vão pra [`sim/champions.ts`](../sim/champions.ts) e são confirmados no
-torneio, em sementes que a busca nunca viu, antes de entrar em `config.ts`.
+Since the simulation runs without a screen and with seeds, you can measure the bots instead of judging by eye:
+[`sim/tournament.sim.ts`](../sim/tournament.sim.ts) plays hundreds of bot-only matches (agent 0 becomes a bot with
+`createGame(seed, { human: false })`) and compares personalities, alternating the corners so a good spawn doesn't favor anyone.
 
 ```bash
-npm run evolve                            # 25 gerações, partindo do guloso
-START=classic EVO_SEED=2 npm run evolve   # outro ponto de partida
-GENS=40 POP=16 npm run evolve             # busca maior
+npm run sim                          # everything, 60 seeds (~5 min)
+SEEDS=200 npm run sim                # more matches, less noise
+SEED0=5000 npm run sim               # different matches, to confirm without repeating the sample
+ONLY="ablation" npm run sim          # only the matchups whose name contains the text
 ```
 
-Outros ajustes: `TRAIN_SEEDS`, `SIGMA0`, `FINAL_SEEDS`. Duas buscas de pontos de partida diferentes que chegam a
-regiões parecidas são o melhor sinal de que o resultado não é só ruído.
+In PowerShell: `$env:SEEDS=200; npm run sim`. The output shows, per personality, wins (with the expected "base" if everyone
+were equal), average territory and deaths. There are matchups of each personality against the classic, all against all, and
+an **ablation** (one new behavior at a time turned on in the classic). With 200 matches the error is about ±3 points:
+only trust bigger differences, or confirm with another `SEED0`.
 
-## Testes
+The `CLASSIC` preset reproduces the original bot behavior bit for bit, so it serves as the reference opponent: a
+change to the bots is only an improvement if it beats the classic in matches you didn't use to tune it.
 
-`npm test` roda tudo em Node, sem navegador:
+## Personality evolution (`npm run evolve`)
 
-| Arquivo                  | O que cobre                                                                      |
+[`sim/evolve.sim.ts`](../sim/evolve.sim.ts) automatically searches for good personality parameters (a simple Evolution Strategy;
+the algorithm is explained at the top of the file and the results in [BOTS.md](BOTS.md)). It takes ~15 to 20
+minutes. Candidates worth keeping go to [`sim/champions.ts`](../sim/champions.ts) and are confirmed in the
+tournament, on seeds the search never saw, before going into `config.ts`.
+
+```bash
+npm run evolve                            # 25 generations, starting from the greedy one
+START=classic EVO_SEED=2 npm run evolve   # another starting point
+GENS=40 POP=16 npm run evolve             # bigger search
+```
+
+Other settings: `TRAIN_SEEDS`, `SIGMA0`, `FINAL_SEEDS`. Two searches from different starting points that reach
+similar regions are the best sign that the result is not just noise.
+
+## Tests
+
+`npm test` runs everything in Node, without a browser:
+
+| File                     | What it covers                                                                   |
 | ------------------------ | -------------------------------------------------------------------------------- |
-| `graph.test.ts`          | quarteirões de uma grade conhecida, `enclosedFaces`, caminhos, `pointInPolygon`   |
-| `procedural.test.ts`     | mapas sempre conexos, sem arestas repetidas, determinísticos; RNG                 |
-| `rules.test.ts`          | fincar/fechar/roubar, bandeira repetida, máximo, destruir cadeia, morte, fim     |
-| `simulation.test.ts`     | partida inteira com bots (nos dois modos de tiro): sem erro, invariantes, determinismo |
-| `feedback.test.ts`       | eventos → mensagens e sons certos, com HUD e som falsos                          |
-| `render.test.ts`         | o renderer percorre todas as camadas sem erro (canvas falso) e a câmera           |
-| `stick.test.ts`          | joystick virtual: zona morta, direção unitária, limite do raio                    |
-| `bots.test.ts`           | linha de fogo, desvio, defesa, risco no planejamento, líder, personalidades       |
+| `graph.test.ts`          | blocks of a known grid, `enclosedFaces`, paths, `pointInPolygon`                 |
+| `procedural.test.ts`     | maps always connected, no repeated edges, deterministic; RNG                     |
+| `rules.test.ts`          | planting/closing/stealing, repeated flag, maximum, destroying a chain, death, end |
+| `simulation.test.ts`     | full bot match (in both shooting modes): no errors, invariants, determinism      |
+| `feedback.test.ts`       | events → correct messages and sounds, with fake HUD and sound                    |
+| `render.test.ts`         | the renderer goes through all layers without error (fake canvas) and the camera  |
+| `stick.test.ts`          | virtual joystick: dead zone, unit direction, radius limit                        |
+| `bots.test.ts`           | line of fire, dodging, defense, risk in planning, leader, personalities          |
 
-O que **não** é coberto: a aparência real (pixels), o HTML do HUD e o código de toque que mexe no DOM (`input/touch.ts`).
-Isso se confere jogando (no celular, ou no modo de dispositivo do Chrome).
+What is **not** covered: the real look (pixels), the HUD's HTML and the touch code that manipulates the DOM (`input/touch.ts`).
+That is checked by playing (on a phone, or in Chrome's device mode).
 
-## Diferenças em relação ao arquivo único original
+## Differences from the original single file
 
-O comportamento de jogo foi mantido. Mudanças deliberadas, todas pequenas:
+The game behavior was kept. Deliberate changes, all small:
 
-- A vitória por `winPct` é checada a cada frame, não a cada 120 ms (estava no código do HUD).
-- A câmera continua respondendo depois do fim da partida (a tecla `M` funcionava, mas a câmera congelava).
-- O embaralhamento das ruas removidas usa Fisher-Yates (antes `sort(() => rnd() - .5)`, que é enviesado).
-- Mapas têm semente (`?seed=`).
-- `window.__game` agora só existe em desenvolvimento.
+- The `winPct` victory is checked every frame, not every 120 ms (it was in the HUD code).
+- The camera keeps responding after the match ends (the `M` key worked, but the camera froze).
+- Shuffling the removed streets uses Fisher-Yates (previously `sort(() => rnd() - .5)`, which is biased).
+- Maps have a seed (`?seed=`).
+- `window.__game` now only exists in development.

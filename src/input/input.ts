@@ -1,22 +1,22 @@
-/** Teclado e mouse. Só guarda o que está pressionado; quem age é quem registrou os callbacks. */
+/** Keyboard and mouse. Only stores what is pressed; whoever registered the callbacks does the acting. */
 import type { Vec } from '../types';
 
 export interface InputCallbacks {
   onRestart(): void;
   onToggleOverview(): void;
   onToggleMute(): void;
-  /** Botão direito: tentar fincar bandeira. */
+  /** Right button: try to plant a flag. */
   onPlant(): void;
-  /** Roda do mouse (`deltaY` > 0 afasta). */
+  /** Mouse wheel (`deltaY` > 0 zooms out). */
   onZoom(deltaY: number): void;
 }
 
 export interface Input {
-  /** Direção WASD/setas, normalizada (ou 0,0). */
+  /** WASD/arrow direction, normalized (or 0,0). */
   dir(): Vec;
-  /** Espaço ou botão esquerdo pressionado. */
+  /** Space or left button pressed. */
   firing(): boolean;
-  /** Posição do mouse em pixels de tela. */
+  /** Mouse position in screen pixels. */
   readonly mouse: Vec;
 }
 
@@ -45,8 +45,8 @@ export function createInput(canvas: HTMLCanvasElement, cb: InputCallbacks): Inpu
   });
 
   canvas.addEventListener('contextmenu', (e) => e.preventDefault());
-  // Toques não devem virar "cliques de mouse" falsos (o navegador gera esses cliques depois do toque,
-  // e eles disparariam o tiro). Quem cuida dos toques é o input/touch.ts.
+  // Touches must not turn into fake "mouse clicks" (the browser generates those clicks after a touch,
+  // and they would fire a shot). input/touch.ts takes care of touches.
   canvas.addEventListener('pointerdown', (e) => {
     if (e.pointerType !== 'mouse') e.preventDefault();
   });

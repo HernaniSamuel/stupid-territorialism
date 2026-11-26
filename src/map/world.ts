@@ -4,7 +4,7 @@ import type { Bounds, Graph, World } from '../types';
 import { buildFaces } from './faces';
 import { buildAdjacency } from './graph';
 
-/** Transforma um grafo de ruas (de qualquer fonte) num mundo jogável. */
+/** Turns a street graph (from any source) into a playable world. */
 export function buildWorld(graph: Graph, rng: Rng): World {
   const { nodes, edges } = graph;
   const adj = buildAdjacency(nodes, edges);

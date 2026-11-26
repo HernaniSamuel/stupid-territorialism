@@ -1,21 +1,21 @@
-/** Placar e fim de partida. */
+/** Scoreboard and end of match. */
 import { CFG } from '../config';
 import type { Agent, GameState } from '../types';
 
 export interface Standing {
   agent: Agent;
-  /** % do território total do mapa. */
+  /** % of the map's total territory. */
   pct: number;
 }
 
-/** Área dominada por cada agente, indexada pelo id. */
+/** Area dominated by each agent, indexed by id. */
 export function territoryAreas(state: GameState): number[] {
   const areas = state.agents.map(() => 0);
   for (const f of state.world.faces) if (f.owner >= 0) areas[f.owner] += f.area;
   return areas;
 }
 
-/** Placar ordenado, do primeiro ao último. */
+/** Sorted scoreboard, from first to last. */
 export function standings(state: GameState): Standing[] {
   const areas = territoryAreas(state);
   return state.agents
@@ -23,20 +23,20 @@ export function standings(state: GameState): Standing[] {
     .sort((x, y) => y.pct - x.pct);
 }
 
-/** Quem lidera o placar, ou `null` se ninguém tem território ainda. */
+/** Who leads the scoreboard, or `null` if nobody has territory yet. */
 export function leader(state: GameState): Agent | null {
   const top = standings(state)[0];
   return top.pct > 0 ? top.agent : null;
 }
 
-/** Encerra a partida (uma vez só). */
+/** Ends the match (only once). */
 export function endMatch(state: GameState): void {
   if (state.over) return;
   state.over = true;
   state.events.push({ type: 'matchEnd' });
 }
 
-/** Encerra a partida se alguém já passou de `winPct`. */
+/** Ends the match if someone has already passed `winPct`. */
 export function checkVictory(state: GameState): void {
   if (!state.over && standings(state)[0].pct >= CFG.winPct) endMatch(state);
 }

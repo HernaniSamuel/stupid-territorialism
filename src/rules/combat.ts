@@ -1,11 +1,11 @@
-/** Movimento dos projéteis e o que acontece quando acertam alguém. */
+/** Projectile movement and what happens when they hit someone. */
 import { CFG } from '../config';
 import { advance, place } from '../entities/agent';
 import { pickStraight } from '../entities/bullets';
 import type { GameState } from '../types';
 import { kill } from './territory';
 
-/** Move os projéteis, aplica acertos e remove os que acabaram. */
+/** Moves the projectiles, applies hits and removes the ones that have ended. */
 export function stepBullets(state: GameState, dt: number): void {
   const { world, agents } = state;
   for (const b of state.bullets) {
@@ -29,7 +29,7 @@ export function stepBullets(state: GameState, dt: number): void {
     }
     for (const ag of agents) {
       if (ag === b.owner || !ag.alive || ag.invT > 0) continue;
-      // Distância ponto–segmento: o tiro não atravessa o alvo entre dois frames.
+      // Point-to-segment distance: the shot cannot pass through the target between two frames.
       const sx = b.x - b.px;
       const sy = b.y - b.py;
       const l2 = sx * sx + sy * sy || 1;

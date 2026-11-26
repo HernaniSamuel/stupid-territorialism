@@ -11,7 +11,7 @@ const DT = 1 / 30;
 function run(state: GameState, seconds: number): void {
   for (let t = 0; t < seconds; t += DT) {
     update(state, DT, IDLE);
-    state.events.length = 0; // ninguém está consumindo os eventos
+    state.events.length = 0; // nobody is consuming the events
   }
 }
 
@@ -24,7 +24,7 @@ function checkInvariants(state: GameState): void {
   for (const ag of agents) {
     expect(Number.isFinite(ag.x) && Number.isFinite(ag.y)).toBe(true);
     const len = edgeLength(world, ag.a, ag.b);
-    expect(len).toBeGreaterThan(0); // está sempre numa rua que existe
+    expect(len).toBeGreaterThan(0); // always on a street that exists
     expect(ag.d).toBeGreaterThanOrEqual(-1e-6);
     expect(ag.d).toBeLessThanOrEqual(len + 1e-6);
     expect(ag.flags.length).toBeLessThanOrEqual(CFG.maxFlags);
@@ -33,13 +33,13 @@ function checkInvariants(state: GameState): void {
   expect(total).toBeLessThanOrEqual(100.0001);
 }
 
-describe('simulação completa (jogador parado, 3 bots)', () => {
+describe('full simulation (idle player, 3 bots)', () => {
   const originalMode = CFG.shotMode;
   afterEach(() => {
     CFG.shotMode = originalMode;
   });
 
-  it('uma partida inteira termina sem erro e os bots conquistam território', () => {
+  it('a full match finishes without error and the bots conquer territory', () => {
     const state = createGame(11);
     run(state, CFG.round + 5);
     expect(state.over).toBe(true);
@@ -50,7 +50,7 @@ describe('simulação completa (jogador parado, 3 bots)', () => {
     expect(botShare).toBeGreaterThan(5);
   }, 60_000);
 
-  it('mantém as invariantes ao longo da partida, nos dois modos de tiro', () => {
+  it('keeps the invariants throughout the match, in both shooting modes', () => {
     for (const mode of ['street', 'free'] as const) {
       CFG.shotMode = mode;
       const state = createGame(5);
@@ -61,18 +61,18 @@ describe('simulação completa (jogador parado, 3 bots)', () => {
     }
   }, 60_000);
 
-  it('uma partida só de bots, com as quatro personalidades, termina sem erro e mantém as invariantes', () => {
+  it('a bots-only match, with all four personalities, finishes without error and keeps the invariants', () => {
     const state = createGame(8, { human: false, personalities: [CLASSIC, HUNTER, CAUTIOUS, GREEDY] });
     for (let i = 0; i < 12; i++) {
       run(state, 20);
       checkInvariants(state);
     }
-    run(state, 10); // folga: o relógio acumulado em ponto flutuante pode parar um instante antes dos 240 s
+    run(state, 10); // slack: the floating-point clock may stop a moment before 240 s
     expect(state.over).toBe(true);
     expect(standings(state).every((r) => r.pct > 0)).toBe(true);
   }, 60_000);
 
-  it('é determinística: mesma semente, mesmo resultado', () => {
+  it('is deterministic: same seed, same result', () => {
     const summary = (seed: number) => {
       const state = createGame(seed);
       run(state, 90);
@@ -81,7 +81,7 @@ describe('simulação completa (jogador parado, 3 bots)', () => {
     expect(summary(21)).toEqual(summary(21));
   }, 60_000);
 
-  it('o tempo acaba mesmo se ninguém chegar a winPct', () => {
+  it('time runs out even if nobody reaches winPct', () => {
     const state = createGame(3);
     state.timeLeft = 1;
     run(state, 2);

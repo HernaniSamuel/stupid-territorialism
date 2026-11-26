@@ -3,7 +3,7 @@ import type { MapSource } from '../src/map/source';
 import { buildWorld } from '../src/map/world';
 import type { Edge, GNode, Graph, World } from '../src/types';
 
-/** Grade regular `n`×`n` de nós (índice = j*n + i), com todas as ruas horizontais e verticais. */
+/** Regular `n`×`n` grid of nodes (index = j*n + i), with all horizontal and vertical streets. */
 export function gridGraph(n: number, spacing = 100): Graph {
   const nodes: GNode[] = [];
   const edges: Edge[] = [];
@@ -22,5 +22,5 @@ export function gridWorld(n: number, spacing = 100): World {
 }
 
 export function gridSource(n: number, spacing = 100): MapSource {
-  return { id: 'grid', label: 'Grade', build: () => gridGraph(n, spacing) };
+  return { id: 'grid', label: 'Grid', build: () => gridGraph(n, spacing) };
 }

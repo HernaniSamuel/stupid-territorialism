@@ -1,20 +1,20 @@
 /**
- * Agentes (jogador e bots) e o movimento deles pelo grafo de ruas.
+ * Agents (player and bots) and their movement along the street graph.
  *
- * Um `Walker` está sempre numa rua: vai do nó `a` ao nó `b` e `d` é quanto já
- * andou a partir de `a`. Só nos nós ele pode trocar de rua.
+ * A `Walker` is always on a street: it goes from node `a` to node `b`, and `d` is how far it
+ * has traveled from `a`. It can only switch streets at nodes.
  */
 import { CFG, TEAMS, type Personality } from '../config';
 import { edgeLength, faceOnSide, nearestNode } from '../map/graph';
 import type { Agent, Vec, Walker, World } from '../types';
 
-/** Escolhe a próxima rua ao chegar num nó. Devolve o nó de destino, ou -1 pra parar. */
+/** Picks the next street on arriving at a node. Returns the destination node, or -1 to stop. */
 export type PickFn = (node: number) => number;
 
-/** Cria o agente `id` (0 = humano) no canto de spawn correspondente. */
+/** Creates agent `id` (0 = human) at its corresponding spawn corner. */
 export function makeAgent(world: World, id: number, human: boolean, persona: Personality): Agent {
   const { y0, x1, y1 } = world.bounds;
-  // Um canto por agente, então o jogo comporta no máximo 4.
+  // One corner per agent, so the game supports at most 4.
   const corners: [number, number][] = [
     [60, y1 - 40],
     [x1 - 60, y0 + 40],
@@ -53,7 +53,7 @@ export function makeAgent(world: World, id: number, human: boolean, persona: Per
   };
 }
 
-/** Atualiza x,y a partir de a, b e d. */
+/** Updates x,y from a, b and d. */
 export function place(world: World, w: Walker): void {
   const A = world.nodes[w.a];
   const B = world.nodes[w.b];
@@ -63,7 +63,7 @@ export function place(world: World, w: Walker): void {
   w.y = A.y + (B.y - A.y) * t;
 }
 
-/** Nó em que o walker está exatamente parado, ou -1 se está no meio de uma rua. */
+/** Node the walker is exactly stopped at, or -1 if it is in the middle of a street. */
 export function nodeAt(world: World, w: Walker): number {
   const L = edgeLength(world, w.a, w.b);
   if (w.d <= 0.001) return w.a;
@@ -71,15 +71,15 @@ export function nodeAt(world: World, w: Walker): number {
   return -1;
 }
 
-/** Nó a até `r` pixels do ponto, ou -1. */
+/** Node within `r` pixels of the point, or -1. */
 export function nodeNear(world: World, p: Vec, r: number): number {
   const n = nearestNode(world, p.x, p.y);
   return Math.hypot(world.nodes[n].x - p.x, world.nodes[n].y - p.y) <= r ? n : -1;
 }
 
 /**
- * Anda `dist` pixels pelas ruas. Em cada nó alcançado, `pick` decide a próxima
- * rua; se devolver -1, o walker para ali (mv = 0).
+ * Moves `dist` pixels along the streets. At each node reached, `pick` decides the next
+ * street; if it returns -1, the walker stops there (mv = 0).
  */
 export function advance(world: World, w: Walker, dist: number, pick: PickFn): void {
   let rem = dist;
@@ -140,7 +140,7 @@ export function advance(world: World, w: Walker, dist: number, pick: PickFn): vo
   }
 }
 
-/** O agente está numa rua que faz divisa com quarteirão dele? (dá bônus de velocidade) */
+/** Is the agent on a street bordering one of its own blocks? (grants a speed bonus) */
 export function onOwnTurf(world: World, ag: Agent): boolean {
   return faceOnSide(world, ag.a, ag.b)?.owner === ag.id || faceOnSide(world, ag.b, ag.a)?.owner === ag.id;
 }

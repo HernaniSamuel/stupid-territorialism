@@ -1,9 +1,9 @@
 /**
- * Tipos compartilhados. Aqui só há dados: nenhuma função, nenhuma dependência.
+ * Shared types. Only data here: no functions, no dependencies.
  *
- * Convenção importante: um "nó" é um cruzamento e é sempre referido pelo seu
- * ÍNDICE em `World.nodes`. Uma "face" é um quarteirão, referida pelo índice em
- * `World.faces`. Os dois são `number`, então cuidado pra não confundir.
+ * Important convention: a "node" is an intersection and is always referred to by its
+ * INDEX in `World.nodes`. A "face" is a city block, referred to by its index in
+ * `World.faces`. Both are `number`, so be careful not to mix them up.
  */
 import type { Personality } from './config';
 import type { Rng } from './core/rng';
@@ -13,39 +13,39 @@ export interface Vec {
   y: number;
 }
 
-/** Cruzamento (ou ponta de rua). Chamado `GNode` pra não colidir com o `Node` do DOM. */
+/** Intersection (or street end). Called `GNode` so it doesn't clash with the DOM's `Node`. */
 export type GNode = Vec;
 
-/** Rua entre dois nós, por índice. */
+/** Street between two nodes, by index. */
 export type Edge = [a: number, b: number];
 
-/** Saída de uma fonte de mapa: só a geometria das ruas. */
+/** Output of a map source: only the street geometry. */
 export interface Graph {
   nodes: GNode[];
   edges: Edge[];
 }
 
-/** Rua saindo de um nó. */
+/** Street leaving a node. */
 export interface Neighbor {
-  /** Nó do outro lado. */
+  /** Node on the other side. */
   to: number;
   len: number;
-  /** Ângulo da rua saindo do nó, em radianos. As listas são ordenadas por ele. */
+  /** Angle of the street leaving the node, in radians. The lists are sorted by it. */
   ang: number;
 }
 
-/** Quarteirão: região fechada por ruas. */
+/** City block: a region enclosed by streets. */
 export interface Face {
-  /** Nós do contorno, em ordem. */
+  /** Nodes of the outline, in order. */
   loop: number[];
-  /** Mesmos pontos de `loop`, pra desenhar. */
+  /** Same points as `loop`, for drawing. */
   pts: GNode[];
   area: number;
-  /** Ponto logo dentro do quarteirão, usado pra testar se um laço o contém. */
+  /** Point just inside the block, used to test whether a loop contains it. */
   probe: Vec;
-  /** Id do agente dono, ou -1. */
+  /** Id of the owning agent, or -1. */
   owner: number;
-  /** 0..1, brilho de captura recente (só visual). */
+  /** 0..1, recent capture glow (visual only). */
   flash: number;
   park: boolean;
 }
@@ -63,28 +63,28 @@ export interface Bounds {
 
 export interface ShortestPaths {
   dist: Float64Array;
-  /** Nó anterior no caminho mínimo desde a origem, ou -1. */
+  /** Previous node on the shortest path from the source, or -1. */
   prev: Int32Array;
 }
 
-/** O mapa pronto pra jogar: grafo de ruas + quarteirões + caches. */
+/** The map, ready to play: street graph + blocks + caches. */
 export interface World {
   nodes: GNode[];
   edges: Edge[];
   adj: Neighbor[][];
   faces: Face[];
-  /** Meia-aresta (a→b, chave `a*N+b`) → índice da face à sua esquerda. */
+  /** Half-edge (a→b, key `a*N+b`) → index of the face on its left. */
   halfEdgeFace: Map<number, number>;
   totalArea: number;
   bounds: Bounds;
-  /** Cache de caminhos mínimos por nó de origem. */
+  /** Cache of shortest paths per source node. */
   paths: Map<number, ShortestPaths>;
 }
 
-/** -1: andando de `b` pra `a`; 0: parado; 1: andando de `a` pra `b`. */
+/** -1: moving from `b` to `a`; 0: stopped; 1: moving from `a` to `b`. */
 export type Dir = -1 | 0 | 1;
 
-/** Algo que anda numa rua: de `a` pra `b`, a `d` pixels de `a`. */
+/** Something that walks along a street: from `a` to `b`, `d` pixels from `a`. */
 export interface Walker extends Vec {
   a: number;
   b: number;
@@ -97,42 +97,42 @@ export interface Agent extends Walker {
   human: boolean;
   name: string;
   color: string;
-  /** Jeito de jogar (só os bots usam; no humano é ignorado). */
+  /** Way of playing (only bots use it; ignored for the human). */
   persona: Personality;
-  /** Nó de spawn inicial. */
+  /** Initial spawn node. */
   base: number;
   vx: number;
   vy: number;
-  /** Ângulo do desenho (suavizado). */
+  /** Drawing angle (smoothed). */
   ang: number;
   alive: boolean;
   respawnT: number;
-  /** Invulnerabilidade restante. */
+  /** Remaining invulnerability. */
   invT: number;
-  /** Recarga restante do tiro. */
+  /** Remaining shot reload. */
   cd: number;
   kills: number;
   deaths: number;
-  /** Nós com bandeira, na ordem em que foram fincadas. */
+  /** Nodes with a flag, in the order they were planted. */
   flags: number[];
-  /** (bots) nós a percorrer até o destino imediato. */
+  /** (bots) nodes to walk through until the immediate destination. */
   route: number[];
-  /** (bots) bandeiras a fincar, terminando na primeira pra fechar o laço. */
+  /** (bots) flags to plant, ending at the first one to close the loop. */
   plan: number[];
-  /** Último sentido de movimento (1 ou -1); define pra onde o tiro sai. */
+  /** Last movement direction (1 or -1); sets where the shot goes out. */
   face: 1 | -1;
 }
 
 export interface StreetBullet extends Walker {
   kind: 'street';
-  /** Posição no passo anterior (pra colisão por segmento). */
+  /** Position in the previous step (for segment collision). */
   px: number;
   py: number;
-  /** Distância restante. */
+  /** Remaining distance. */
   left: number;
   life: number;
   owner: Agent;
-  /** Rastro recente, pra desenhar. */
+  /** Recent trail, for drawing. */
   tr: Vec[];
 }
 
@@ -156,28 +156,28 @@ export interface Particle extends Vec {
 }
 
 /**
- * Fatos que aconteceram na simulação. A simulação só os publica em
- * `GameState.events`; quem decide o que fazer (som, mensagem na tela) é a camada de UI.
+ * Facts that happened in the simulation. The simulation only publishes them to
+ * `GameState.events`; the UI layer decides what to do (sound, on-screen message).
  */
 export type GameEvent =
   | { type: 'shot'; agent: Agent }
   | { type: 'plant'; agent: Agent }
   | { type: 'plantRejected'; agent: Agent; reason: 'duplicate' | 'maxFlags' }
-  /** O agente chegou a 3 bandeiras: já dá pra fechar o laço. */
+  /** The agent reached 3 flags: the loop can be closed now. */
   | { type: 'loopReady'; agent: Agent }
-  /** Laço fechado que rendeu território. `pct` = % do mapa ganho. */
+  /** Closed loop that yielded territory. `pct` = % of the map gained. */
   | { type: 'claim'; agent: Agent; pct: number }
   | { type: 'claimEmpty'; agent: Agent }
   | { type: 'chainDestroyed'; owner: Agent; by: Agent }
   | { type: 'kill'; victim: Agent; killer: Agent }
   | { type: 'matchEnd' };
 
-/** O que o jogador humano está pedindo neste frame. */
+/** What the human player is asking for this frame. */
 export interface PlayerCommand {
-  /** Direção desejada, normalizada (ou 0,0). */
+  /** Desired direction, normalized (or 0,0). */
   dir: Vec;
   fire: boolean;
-  /** Ponto do mundo mirado (só importa no modo 'free'). */
+  /** World point being aimed at (only matters in 'free' mode). */
   aim: Vec;
 }
 
@@ -186,12 +186,12 @@ export interface GameState {
   rng: Rng;
   world: World;
   agents: Agent[];
-  /** O agente humano (sempre `agents[0]`). */
+  /** The human agent (always `agents[0]`). */
   player: Agent;
   bullets: Bullet[];
   particles: Particle[];
   timeLeft: number;
   over: boolean;
-  /** Fila de eventos ainda não consumidos pela UI. */
+  /** Queue of events not yet consumed by the UI. */
   events: GameEvent[];
 }

@@ -29,40 +29,40 @@ beforeEach(() => {
 });
 
 describe('handleEvents', () => {
-  it('esvazia a fila de eventos', () => {
+  it('empties the event queue', () => {
     plant(state, state.player, 0);
     handleEvents(state, hud, sfx);
     expect(state.events).toEqual([]);
   });
 
-  it('jogador fecha laço: som e mensagem com a porcentagem', () => {
+  it('player closes a loop: sound and message with the percentage', () => {
     for (const n of [0, 1, 6, 5]) plant(state, state.player, n);
     closeLoop(state, state.player);
     handleEvents(state, hud, sfx);
     expect(played).toContain('claim');
-    expect(said).toContain('Território fechado! +6.3%');
-    expect(said).toContain('Agora volte à 1ª bandeira (botão direito) pra fechar o território');
+    expect(said).toContain('Territory closed! +6.3%');
+    expect(said).toContain('Now return to the 1st flag (right button) to close the territory');
   });
 
-  it('avisa quando o jogador é atingido e quando derruba alguém', () => {
+  it('warns when the player is hit and when they take someone down', () => {
     const bot = state.agents[1];
     kill(state, state.player, bot);
     kill(state, bot, state.player);
     handleEvents(state, hud, sfx);
-    expect(said).toEqual([`${bot.name} te acertou!`, `Você derrubou o ${bot.name}`]);
+    expect(said).toEqual([`${bot.name} hit you!`, `You took down the ${bot.name}`]);
   });
 
-  it('avisa quando a cadeia de alguém é destruída', () => {
+  it("warns when someone's chain is destroyed", () => {
     const bot = state.agents[1];
     bot.flags = [0, 1, 6];
     destroyChain(state, bot, state.player);
     state.player.flags = [2];
     destroyChain(state, state.player, bot);
     handleEvents(state, hud, sfx);
-    expect(said).toEqual([`Você destruiu as bandeiras do ${bot.name}`, `${bot.name} destruiu suas bandeiras!`]);
+    expect(said).toEqual([`You destroyed the ${bot.name}'s flags`, `${bot.name} destroyed your flags!`]);
   });
 
-  it('sons de bots distantes não tocam; os de bots perto, sim', () => {
+  it('sounds from distant bots do not play; those from nearby bots do', () => {
     const bot = state.agents[1];
     bot.x = state.player.x + 5000;
     plant(state, bot, 0);
@@ -77,16 +77,16 @@ describe('handleEvents', () => {
     expect(played).toEqual(['plant']);
   });
 
-  it('bandeira repetida só avisa o jogador humano', () => {
+  it('a repeated flag only warns the human player', () => {
     plant(state, state.player, 0);
     plant(state, state.player, 0);
     plant(state, state.agents[1], 3);
     plant(state, state.agents[1], 3);
     handleEvents(state, hud, sfx);
-    expect(said).toEqual(['Já tem bandeira sua aqui']);
+    expect(said).toEqual(['You already have a flag here']);
   });
 
-  it('chama a tela de fim quando a partida acaba', () => {
+  it('shows the end screen when the match ends', () => {
     state.events.push({ type: 'matchEnd' });
     handleEvents(state, hud, sfx);
     expect(ended).toBe(1);
