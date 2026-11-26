@@ -3,6 +3,10 @@
 You are a blue triangle on a street map. Plant flags at intersections, return to the first one and **enclose city blocks** to dominate them, while three bots (red, purple and orange) do the same, steal your territory and shoot at you.
 The winner is whoever has the most territory after 4 minutes, or whoever reaches 50% of the map first.
 
+## ▶ [Play it in the browser](https://hernanisamuel.github.io/stupid-territorialism/)
+
+<https://hernanisamuel.github.io/stupid-territorialism/> (computer or phone, no installation needed)
+
 ## How to run
 
 You need [Node.js](https://nodejs.org) (tested with v22).
@@ -44,6 +48,11 @@ Touch controls appear automatically on touch devices: a **joystick** that appear
 sound, restart and fullscreen. With the device upright, the game pauses and asks you to rotate it. To test on a phone,
 run `npm run dev -- --host` and open the network address Vite shows (computer and phone on the same Wi-Fi network), or use
 Chrome's device mode (F12 → phone icon).
+
+**Install it like an app** (optional). On Android with Chrome, open the game and use the menu (⋮) → *Install app* or
+*Add to Home screen*: it opens fullscreen, in landscape, with its own icon. On iPhone with Safari, use *Share* →
+*Add to Home Screen*. The installed app still needs an internet connection (there is no offline cache). Icons and settings
+are in [`public/`](public/manifest.webmanifest).
 
 Each bot plays differently: the **red** one hunts flags and the leader, the **purple** one is cautious and the **orange** one is greedy
 (details in [`docs/BOTS.md`](docs/BOTS.md)). They dodge your shots and prefer to target whoever is winning.
