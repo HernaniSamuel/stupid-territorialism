@@ -56,6 +56,15 @@ dying makes you lose the flags you haven't closed yet.
 Every map is born from a seed (shown in the browser console). Open `http://localhost:5173/?seed=123` to play the same
 map again, with the same initial bot decisions.
 
+## Publishing (GitHub Pages)
+
+Every push to `main` runs [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml): it installs, runs the tests,
+builds and publishes `dist/`. If a test fails, nothing is published.
+
+One-time setup: **Settings → Pages → Build and deployment → Source: "GitHub Actions"**. The game is then served at
+`https://<user>.github.io/<repository>/`, and `?seed=123` works there too, so you can share a map as a link.
+Asset paths are relative (`base: './'` in `vite.config.ts`), so no repository name is hard-coded.
+
 ## Tuning the game
 
 All parameters (speeds, number of bots, map size, match time, shooting mode...) are in
