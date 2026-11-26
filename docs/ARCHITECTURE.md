@@ -151,6 +151,7 @@ similar regions are the best sign that the result is not just noise.
 | `render.test.ts`         | the renderer goes through all layers without error (fake canvas) and the camera  |
 | `stick.test.ts`          | virtual joystick: dead zone, unit direction, radius limit                        |
 | `bots.test.ts`           | line of fire, dodging, defense, risk in planning, leader, personalities          |
+| `sw.test.ts`             | the real service worker with a fake server and cache: offline, updates, bad network |
 
 What is **not** covered: the real look (pixels), the HUD's HTML and the touch code that manipulates the DOM (`input/touch.ts`).
 That is checked by playing (on a phone, or in Chrome's device mode).

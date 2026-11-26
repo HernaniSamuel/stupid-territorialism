@@ -95,6 +95,11 @@ startGame(seedFromUrl() ?? randomSeed());
 setInterval(() => hud.update(state), 120);
 requestAnimationFrame(frame);
 
+// Offline support (public/sw.js). Production builds only: in development it would get in the way of live reload.
+if (import.meta.env.PROD && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('./sw.js').catch((error) => console.warn('Offline support unavailable:', error));
+}
+
 // Debug hook in the console (development only): __game.state, __game.CFG
 if (import.meta.env.DEV) {
   Object.defineProperty(window, '__game', {

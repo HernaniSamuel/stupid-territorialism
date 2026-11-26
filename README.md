@@ -51,8 +51,13 @@ Chrome's device mode (F12 → phone icon).
 
 **Install it like an app** (optional). On Android with Chrome, open the game and use the menu (⋮) → *Install app* or
 *Add to Home screen*: it opens fullscreen, in landscape, with its own icon. On iPhone with Safari, use *Share* →
-*Add to Home Screen*. The installed app still needs an internet connection (there is no offline cache). Icons and settings
-are in [`public/`](public/manifest.webmanifest).
+*Add to Home Screen*. Icons and settings are in [`public/`](public/manifest.webmanifest).
+
+**Offline.** After the game has been opened once, it also works without internet, in the browser or installed. When you
+are online, a new deploy shows up right away; the saved copy is only used if there is no connection or it takes more than
+4 seconds. This is [`public/sw.js`](public/sw.js), a small service worker with no build step. It is active only in
+production builds served over HTTPS or `localhost`, so not with `npm run dev`, nor on a phone opening your computer's
+network address.
 
 Each bot plays differently: the **red** one hunts flags and the leader, the **purple** one is cautious and the **orange** one is greedy
 (details in [`docs/BOTS.md`](docs/BOTS.md)). They dodge your shots and prefer to target whoever is winning.
